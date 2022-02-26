@@ -40,6 +40,8 @@ Function Wait-GoogleAuthApiToken
     Write-Verbose "Stopped HttpListener."
   }
   catch {
+    # TODO: Catch Permission denied error and warn about running from an elevated prompt
+    # or add Requires -Administrator
     Write-Error $_.ToString()
   }
   finally {

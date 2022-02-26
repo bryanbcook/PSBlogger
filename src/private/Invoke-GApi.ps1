@@ -6,7 +6,9 @@ Function Invoke-GApi
 
         [string]$body,
 
-        [string]$method = "GET"
+        [string]$method = "GET",
+
+        [string]$ContentType = "application/json"
     )
 
     # obtain the auth-header
@@ -15,7 +17,7 @@ Function Invoke-GApi
     $invokeArgs = @{
         Uri = $uri
         Method = $method
-        ContentType = "application/json"
+        ContentType = $ContentType
         Headers = $headers
     }
 
@@ -27,5 +29,7 @@ Function Invoke-GApi
         $invokeArgs.Body = $body
     }
 
-    Invoke-RestMethod @invokeArgs
+    Write-Verbose $Body
+
+    Invoke-RestMethod @invokeArgs -Verbose
 }

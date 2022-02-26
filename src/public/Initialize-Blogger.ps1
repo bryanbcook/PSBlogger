@@ -40,7 +40,15 @@ Function Initialize-Blogger
 
     Write-Information "Let's get an auth-code."
 
-    $url = "https://accounts.google.com/o/oauth2/auth?client_id=$clientId&scope=https://www.googleapis.com/auth/blogger&response_type=code&redirect_uri=$redirectUri&access_type=offline&approval_prompt=force"
+    # specify the scopes we want in our auth token
+    $scope = @(
+        "https://www.googleapis.com/auth/blogger" 
+        #"https://www.googleapis.com/auth/drive.file"
+        "https://www.googleapis.com/auth/drive"
+
+    ) -join " "
+
+    $url = "https://accounts.google.com/o/oauth2/auth?client_id=$clientId&scope=$scope&response_type=code&redirect_uri=$redirectUri&access_type=offline&approval_prompt=force"
 
     Start-Process $url
 
