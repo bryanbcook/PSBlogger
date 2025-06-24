@@ -48,7 +48,7 @@ Function Publish-MarkdownBloggerPost
     $postArgs.PostId = $postInfo.postid
   }
 
-  if ($postInfo.tags) {
+  if ($postInfo["tags"]) {
     $postArgs.Labels = [array]$postInfo.tags
   }
   
