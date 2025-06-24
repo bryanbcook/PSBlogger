@@ -113,6 +113,7 @@ postId: "123456"
 "@
         $testFile = "TestDrive:\dummy.md"
         Set-Content $testFile -Value $post
+        $BloggerSession.BlogId = 1234
         Mock Publish-BloggerPost -Verifiable -ParameterFilter { $PostId -eq "123456"} { return @{ id="123"}}
 
         #act
@@ -134,8 +135,8 @@ postId: "123456"
     Set-MarkdownFrontMatter -File $validFile -Replace $postInfo
 
     InModuleScope PSBlogger {
-      $tags = @("PowerShell","Pester")
-      Mock Publish-BloggerPost -Verifiable -ParameterFilter { $Labels -ne $null -and (-not (Compare-Object $Labels $tags))} { return @{ id="123"} }
+      Mock Publish-BloggerPost -Verifiable -ParameterFilter { 
+        $Labels -ne $null -and (-not (Compare-Object $Labels @("PowerShell","Pester")))} { return @{ id="123"} }
     }
 
     # act
