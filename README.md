@@ -1,6 +1,6 @@
-# TyporaBloggerAPI
+# PSBlogger
 
-A PowerShell library for publishing markdown files authored in Typora to Blogger. This library exists because _OpenLiveWriter_ isn't being actively maintained and [Typora](https://typora.io) is awesome. The intention is that you would author your blog posts in Typora and then drop to a command-prompt to publish them to Blogger. 
+A PowerShell library for publishing markdown files authored in markdown to Blogger. This library exists because _OpenLiveWriter_ isn't being actively maintained and [Typora](https://typora.io) and [Obsidian](https://obsidian.md) are awesome. The intention is that you would author your blog posts in markdown and then drop to a command-prompt to publish them to Blogger. 
 
 > **Note**:
 >
