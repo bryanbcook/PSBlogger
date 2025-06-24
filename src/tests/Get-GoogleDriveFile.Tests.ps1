@@ -1,7 +1,7 @@
 Describe "Get-GoogleDriveFile" {
 
     BeforeEach {
-        Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+        Import-Module $PSScriptRoot\..\PSBlogge.psm1 -Force
     }
 
     It "should get files" {
