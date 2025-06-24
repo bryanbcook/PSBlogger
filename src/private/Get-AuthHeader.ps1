@@ -2,13 +2,13 @@ function Get-AuthHeader()
 {
     Assert-CredentialCache
 
-    if (!(Test-GoogleAccessToken $TyporaBloggerSession.AccessToken))
+    if (!(Test-GoogleAccessToken $BloggerSession.AccessToken))
     {
-        $token = Update-GoogleAccessToken -refreshToken $TyporaBloggerSession.RefreshToken
+        $token = Update-GoogleAccessToken -refreshToken $BloggerSession.RefreshToken
         Update-CredentialCache -token $token
     }
 
-    $header= @{ Authorization = "Bearer $($TyporaBloggerSession.AccessToken)"}
+    $header= @{ Authorization = "Bearer $($BloggerSession.AccessToken)"}
 
     $header
 }

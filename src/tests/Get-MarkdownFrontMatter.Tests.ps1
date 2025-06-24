@@ -1,6 +1,6 @@
 Describe "Get-MarkdownFrontMatter" {
   BeforeEach {
-    Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
 
     $markdownWithFrontMatterFile = "TestDrive:\valid.md"

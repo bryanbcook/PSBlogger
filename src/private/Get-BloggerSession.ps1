@@ -1,14 +1,14 @@
-Function Get-TyporaBloggerSession
+Function Get-BloggerSession
 {
   $session =   
     [ordered]@{
-      CredentialCache = "$($env:USERPROFILE)\\.typorabloggerapi\\credentialcache.json"
-      UserPreferences = "$($env:USERPROFILE)\\.typorabloggerapi\\settings.json"
+      CredentialCache = "$($env:USERPROFILE)\\.PSBlogger\\credentialcache.json"
+      UserPreferences = "$($env:USERPROFILE)\\.PSBlogger\\settings.json"
       AccessToken = $null
       RefreshToken = $null
       PandocMarkdownFormat = "markdown+emoji"
       PandocHtmlFormat = "html"
-      PandocTemplate = "$($env:USERPROFILE)\\.typorabloggerapi\\template.html"
+      PandocTemplate = "$($env:USERPROFILE)\\.PSBlogger\\template.html"
       PandocAdditionalArgs = "--html-q-tags --ascii"
       BlogId = $null
     }

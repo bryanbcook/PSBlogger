@@ -2,7 +2,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'TyporaBloggerApi.psm1'
+RootModule = 'PSBlogger.psm1'
 
 # Version number of this module.
 ModuleVersion = '0.1.0'
@@ -64,7 +64,7 @@ RequiredAssemblies = ''
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 #FunctionsToExport = 'GetBloggerBlogs',
 #                    'Get-BloggerPosts', 
-#                    'Initialize-TyporaBlogger',
+#                    'Initialize-Blogger',
 #                    'Publish-BloggerPost'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -94,7 +94,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'blogger','typora'
+        Tags = 'blogger','markdown','pandoc'
 
         # A URL to the license for this module.
         #LicenseUri = ''

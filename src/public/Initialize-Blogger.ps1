@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Initialize the local system to use Typora + Blogger together
+Initialize the local system to use Pandoc + Blogger together
 
 .DESCRIPTION
-This prepares your system to use Typora + Blogger together by obtaining an authtoken that is authorized to communicate with blogger.
+This prepares your system to use Pandoc + Blogger together by obtaining an authtoken that is authorized to communicate with blogger.
 
 .PARAMETER clientId
 Google API Client ID. A default value is provided, but you can provide your own if you don't trust me.
@@ -20,10 +20,10 @@ This is the auth code provided
 .EXAMPLE
 Initiate a login flow with Google
 
-    Initialize-TyporaBlogger
+    Initialize-Blogger
 
 #>
-Function Initialize-TyporaBlogger 
+Function Initialize-Blogger 
 {
     Param(
         [Parameter(HelpMessage="Google API ClientId")]

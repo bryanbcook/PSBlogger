@@ -1,7 +1,7 @@
 
 function Get-CredentialCache()
 {
-    (Get-Content $TyporaBloggerSession.CredentialCache) | ConvertFrom-Json
+    (Get-Content $BloggerSession.CredentialCache) | ConvertFrom-Json
 }
 
 function Set-CredentialCache
@@ -20,7 +20,7 @@ function Set-CredentialCache
         refresh_token=$refreshToken.refresh_token
     }
 
-    $parentFolder = Split-Path $TyporaBloggerSession.CredentialCache -Parent
+    $parentFolder = Split-Path $BloggerSession.CredentialCache -Parent
 
     if (-not (Test-Path $parentFolder)) {
         Write-Verbose "Creating credential cache folder: $parentFolder"
@@ -28,11 +28,11 @@ function Set-CredentialCache
     }
 
     Write-Verbose "Writing access + refresh tokens to credential cache..."
-    Set-Content $TyporaBloggerSession.CredentialCache -Value ($cache | ConvertTo-Json) -Force
+    Set-Content $BloggerSession.CredentialCache -Value ($cache | ConvertTo-Json) -Force
 
     # reset previously loaded auth tokens / force reload + validation for next api call
-    $TyporaBloggerSession.AccessToken = $null
-    $TyporaBloggerSession.RefreshToken = $null
+    $BloggerSession.AccessToken = $null
+    $BloggerSession.RefreshToken = $null
 }
 
 function Update-CredentialCache
@@ -47,24 +47,24 @@ function Update-CredentialCache
     $credentialCache.access_token = $token.access_token
 
     Write-Verbose "Updating session access token..."
-    $TyporaBloggerSession.AccessToken = $token.access_token
+    $BloggerSession.AccessToken = $token.access_token
 
-    Set-Content $TyporaBloggerSession.CredentialCache -Value ($credentialCache | ConvertTo-Json)
+    Set-Content $BloggerSession.CredentialCache -Value ($credentialCache | ConvertTo-Json)
 
 }
 
 function Assert-CredentialCache
 {
-    if ($null -eq $TyporaBloggerSession.AccessToken)
+    if ($null -eq $BloggerSession.AccessToken)
     {
         Write-Verbose "Initializing session with cached access+refresh tokens..."
-        if (-not (Test-Path $TyporaBloggerSession.CredentialCache)) {
-            throw "Cached credentials not found. Please call Initialize-TyporaBlogger"
+        if (-not (Test-Path $BloggerSession.CredentialCache)) {
+            throw "Cached credentials not found. Please call Initialize-Blogger"
         }
 
         $cache = Get-CredentialCache
 
-        $TyporaBloggerSession.AccessToken  = $cache.access_token
-        $TyporaBloggerSession.RefreshToken = $cache.refresh_token
+        $BloggerSession.AccessToken  = $cache.access_token
+        $BloggerSession.RefreshToken = $cache.refresh_token
     }
 }

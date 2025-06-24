@@ -3,4 +3,4 @@ Param(
 )
 $credential = Get-Content .\credentials.json | ConvertFrom-Json
 
-Initialize-TyporaBlogger -$code
+Initialize-Blogger -$code

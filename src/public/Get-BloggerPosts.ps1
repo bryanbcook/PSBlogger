@@ -10,7 +10,7 @@ Function Get-BloggerPosts
 
     if (!$PSBoundParameters.ContainsKey("BlogId"))
     {
-      $BlogId = $TyporaBloggerSession.BlogId
+      $BlogId = $BloggerSession.BlogId
       if (0 -eq $BlogId) {
         throw "BlogId not specified."
       }

@@ -26,18 +26,18 @@ function ConvertTo-HtmlFromMarkdown
 
     # Use pandoc to convert the markdown to Html 
     $pandocArgs =  "`"{0}`" " -f $File
-    $pandocArgs += "-f {0} " -f $TyporaBloggerSession.PandocMarkdownFormat
-    $pandocArgs += "-t {0} " -f $TyporaBloggerSession.PandocHtmlFormat
+    $pandocArgs += "-f {0} " -f $BloggerSession.PandocMarkdownFormat
+    $pandocArgs += "-t {0} " -f $BloggerSession.PandocHtmlFormat
 
     # add template and toc if template is available
-    if (Test-Path $TyporaBloggerSession.PandocTemplate) {
+    if (Test-Path $BloggerSession.PandocTemplate) {
         Write-Verbose "Using template"
-        $pandocArgs += "--template `"{0}`" --toc " -f $TyporaBloggerSession.PandocTemplate
+        $pandocArgs += "--template `"{0}`" --toc " -f $BloggerSession.PandocTemplate
     }
     # add additional command-line arguments
-    if ($TyporaBloggerSession.PandocAdditionalArgs) {
+    if ($BloggerSession.PandocAdditionalArgs) {
         Write-Verbose "Using additional args"
-        $pandocArgs += "{0} " -f $TyporaBloggerSession.PandocAdditionalArgs
+        $pandocArgs += "{0} " -f $BloggerSession.PandocAdditionalArgs
     }
 
     if (!($OutFile))
