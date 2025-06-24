@@ -8,10 +8,10 @@ Describe "Publish-MarkdownBloggerPost" {
     
   }
   BeforeEach {
-    Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
 
     # set up dummy results
-    InModuleScope TyporaBloggerAPI {
+    InModuleScope PSBlogger {
       # avoid blogger api for now
       Mock Publish-BloggerPost {return @{ id="123"}}
       # avoid pandoc for now
@@ -23,8 +23,8 @@ Describe "Publish-MarkdownBloggerPost" {
 
     BeforeEach {
       # clear blogid
-      InModuleScope TyporaBloggerAPI {
-        $TyporaBloggerSession.BlogId = $null
+      InModuleScope PSBlogger {
+        $BloggerSession.BlogId = $null
       }      
     }
 
@@ -37,7 +37,7 @@ Describe "Publish-MarkdownBloggerPost" {
 
     It "Should publish to blog when blog id is specified" {
       # arrange
-      InModuleScope TyporaBloggerAPI {
+      InModuleScope PSBlogger {
         Mock Set-MarkdownFrontMatter -Verifiable {}
       }
 
@@ -68,7 +68,7 @@ Describe "Publish-MarkdownBloggerPost" {
       # arrange
       $testFile = "TestDrive:\testfile.md"
       Set-Content -Path $testFile -Value "# hello world"
-      InModuleScope TyporaBloggerApi {
+      InModuleScope PSBlogger {
         Mock Publish-BloggerPost -ParameterFilter { $Draft -eq $true } { return @{ id=123 } }
       }
 
@@ -103,7 +103,7 @@ wip: true
   Context "Publishing an update to existing post" {
 
     It "Should use post id when publishing" {
-      InModuleScope TyporaBloggerAPI {
+      InModuleScope PSBlogger {
       #arrange
         $post = @"
 ---
@@ -133,7 +133,7 @@ postId: "123456"
     $postInfo.tags = @("PowerShell","Pester")
     Set-MarkdownFrontMatter -File $validFile -Replace $postInfo
 
-    InModuleScope TyporaBloggerApi {
+    InModuleScope PSBlogger {
       $tags = @("PowerShell","Pester")
       Mock Publish-BloggerPost -Verifiable -ParameterFilter { $Labels -ne $null -and (-not (Compare-Object $Labels $tags))} { return @{ id="123"} }
     }
@@ -149,7 +149,7 @@ postId: "123456"
   It "Should update front matter with postid after publishing" {
     # arrange
     $blogPost = New-BlogPost "post1"
-    Mock -ModuleName TyporaBloggerAPI Publish-BloggerPost { return $blogPost }
+    Mock -ModuleName PSBlogger Publish-BloggerPost { return $blogPost }
     
     # act
     Publish-MarkdownBloggerPost -File $validFile -BlogId "123"

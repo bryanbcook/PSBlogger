@@ -4,7 +4,7 @@ Describe "ConvertTo Markdown" {
   }
 
   BeforeEach {
-    Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
   

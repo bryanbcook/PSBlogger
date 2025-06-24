@@ -3,7 +3,7 @@ Describe 'Set-MarkdownFrontMatter' {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
   }
   BeforeEach {
-    Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
   It "Should only support markdownfiles" {

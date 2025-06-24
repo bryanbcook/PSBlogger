@@ -5,13 +5,13 @@
 - Setup the google access-token + refresh token, save it to disk
 
   ```
-  Init-TyporaBlogger -clientId -clientSecret -redirectUri -code
+  Init-Blogger -clientId -clientSecret -redirectUri -code
   ```
 
   And if we could host a weblistener, we could launch the browser and wait for the auth-flow
 
   ```
-  Connect-TyporaBlogger
+  Connect-Blogger
   ```
 
 We want configuration settings to store default values.
@@ -19,13 +19,13 @@ We want configuration settings to store default values.
 - Get configuration settings. This returns an object with settings to use.
 
   ```
-  Get-TyporaBloggerConfig
+  Get-BloggerConfig
   ```
 
 - Set Configuration settings. You can pass individual settings. Set to "" to erase
 
   ```
-  Set-TyporaBloggerConfig 
+  Set-BloggerConfig 
   ```
 
 

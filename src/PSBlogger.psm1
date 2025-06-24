@@ -26,6 +26,6 @@ Export-ModuleMember -Function $publicFunctions
 # ensure Tls12
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$TyporaBloggerSession = Get-TyporaBloggerSession
-$TyporaBloggerSession | Out-String | Write-Verbose
-New-Variable -Name TyporaBloggerSession -Value $TyporaBloggerSession -Scope Script -Force
+$BloggerSession = Get-BloggerSession
+$BloggerSession | Out-String | Write-Verbose
+New-Variable -Name BloggerSession -Value $BloggerSession -Scope Script -Force

@@ -26,7 +26,7 @@ Function Wait-GoogleAuthApiToken
         $authCodeReceived = $true
 
         # Send "Thanks!"
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes("<html><body>Good Job! Successfully authorized TyporaBloggerAPI. You can close this browser window now.</body></html>")
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes("<html><body>Good Job! Successfully authorized PSBlogger. You can close this browser window now.</body></html>")
         $response = $HttpContext.Response
         $response.ContentLength64 = $buffer.Length
         $output = $response.OutputStream;

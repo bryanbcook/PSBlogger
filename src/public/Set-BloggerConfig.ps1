@@ -1,4 +1,4 @@
-Function Set-TyporaBloggerConfig
+Function Set-BloggerConfig
 {
   [CmdletBinding()]
   Param(
@@ -10,10 +10,10 @@ Function Set-TyporaBloggerConfig
 
   $userPreferences = @{}
 
-  if (Test-Path $TyporaBloggerSession.UserPreferences)
+  if (Test-Path $BloggerSession.UserPreferences)
   {
-    Write-Verbose "Loading preferences from $($TyporaBloggerSession.UserPreferences)"
-    $userPreferences = Get-Content $TyporaBloggerSession.UserPreferences | ConvertFrom-Json
+    Write-Verbose "Loading preferences from $($BloggerSession.UserPreferences)"
+    $userPreferences = Get-Content $BloggerSession.UserPreferences | ConvertFrom-Json
   }
 
   if ($userPreferences.PsObject.Properties.Name -notcontains $Name)
@@ -26,6 +26,6 @@ Function Set-TyporaBloggerConfig
     $userPreferences.$Name = $Value
   }  
 
-  Set-Content -Path $TyporaBloggerSession.UserPreferences -Value ($userPreferences | ConvertTo-Json)
-  $TyporaBloggerSession.$Name = $Value
+  Set-Content -Path $BloggerSession.UserPreferences -Value ($userPreferences | ConvertTo-Json)
+  $BloggerSession.$Name = $Value
 }

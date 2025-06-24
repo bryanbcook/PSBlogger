@@ -1,19 +1,19 @@
-Describe "Initialize-TyporaBlogger" {
+Describe "Initialize-Blogger" {
 
   BeforeEach {
-    Import-Module $PSScriptRoot\..\TyporaBloggerApi.psm1 -Force
+    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
   # Context "Try it" {
   #   It "Should launch browser and authenticate" {
-  #     Initialize-TyporaBlogger
+  #     Initialize-Blogger
   #   }
   # }
 
   Context "User provides AuthCode" {
 
     BeforeEach {
-      InModuleScope -ModuleName TyporaBloggerAPI {
+      InModuleScope -ModuleName PSBlogger {
         # simulate valid auth token
         Mock Get-GoogleAccessToken { return @{ refresh_token = "refresh_token" } }
         # simulate valid offline token
@@ -28,14 +28,14 @@ Describe "Initialize-TyporaBlogger" {
     It "Should persist credentials" {
       
       # test variable inside loaded module
-      InModuleScope -ModuleName TyporaBloggerAPI {
+      InModuleScope -ModuleName PSBlogger {
         # arrange
         $credentialCache = "TestDrive:\credentialcache.json"
-        $TyporaBloggerSession.CredentialCache = $credentialCache
+        $BloggerSession.CredentialCache = $credentialCache
 
 
         # act
-        Initialize-TyporaBlogger
+        Initialize-Blogger
         
         # assert
         $credentials = Get-Content -Path $credentialCache | ConvertFrom-Json
@@ -45,20 +45,20 @@ Describe "Initialize-TyporaBlogger" {
 
     It "Should reset previous auth tokens" {
       # test variable inside loaded module
-      InModuleScope -ModuleName TyporaBloggerAPI {
+      InModuleScope -ModuleName PSBlogger {
         # arrange
         $credentialCache = "TestDrive:\credentialcache.json"
-        $TyporaBloggerSession.CredentialCache = $credentialCache
+        $BloggerSession.CredentialCache = $credentialCache
         
-        $TyporaBloggerSession.AccessToken = "invalid"
-        $TyporaBloggerSession.RefreshToken = "invalid"
+        $BloggerSession.AccessToken = "invalid"
+        $BloggerSession.RefreshToken = "invalid"
 
         # act
-        Initialize-TyporaBlogger
+        Initialize-Blogger
         
         # assert
-        $TyporaBloggerSession.AccessToken | Should -Be $null
-        $TyporaBloggerSession.RefreshToken | Should -Be $null
+        $BloggerSession.AccessToken | Should -Be $null
+        $BloggerSession.RefreshToken | Should -Be $null
       }
     }
 
