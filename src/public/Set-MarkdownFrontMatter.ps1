@@ -10,7 +10,7 @@ Function Set-MarkdownFrontMatter
     [hashtable]$Update,
 
     [Parameter(HelpMessage="Replace the front-matter with the hashtable", Mandatory=$true, ParameterSetName="Replace")]
-    [System.Collections.Specialized.OrderedDictionary]$Replace
+    [System.Collections.Specialized.IOrderedDictionary]$Replace
   )
 
   try {
