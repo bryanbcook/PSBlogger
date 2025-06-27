@@ -8,11 +8,19 @@ Function Invoke-GApi
 
         [string]$method = "GET",
 
-        [string]$ContentType = "application/json"
+        [string]$ContentType = "application/json",
+
+        [Parameter(Mandatory=$false)]
+        [hashtable]$AdditionalHeaders = @{}
     )
 
     # obtain the auth-header
     $headers = Get-AuthHeader
+
+    # Add any additional headers
+    foreach ($key in $AdditionalHeaders.Keys) {
+        $headers[$key] = $AdditionalHeaders[$key]
+    }
 
     $invokeArgs = @{
         Uri = $uri
