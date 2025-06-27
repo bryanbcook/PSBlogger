@@ -18,6 +18,21 @@ Describe "Find-MarkdownImages" {
   }
 
   Context "Basic image detection" {
+
+    It "Should return an empty array if there are no images" {
+      # arrange
+      $markdownFile = "TestDrive:\no-images.md"
+      $markdownContent = "# Test Post"
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
+      $result.Count | Should -Be 0
+      $result | Should -Be @()
+    }
+
     It "Should find images with alt text only" {
       $markdownFile = "TestDrive:\basic.md"
       $markdownContent = @"
