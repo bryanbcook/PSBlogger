@@ -1,8 +1,10 @@
 Function Invoke-GApi
 {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="Uri")]
     param(
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName="Uri")]
+        [Parameter(Mandatory, ParameterSetName="Body")]
+        [Parameter(Mandatory, ParameterSetName="InFile")]
         [string]$uri,
 
         [Parameter(ParameterSetName="Body")]
@@ -11,14 +13,20 @@ Function Invoke-GApi
         [Parameter(ParameterSetName="InFile")]
         [string]$InFile,
 
-        [Parameter()]
+        [Parameter(ParameterSetName="Uri")]
+        [Parameter(ParameterSetName="Body")]
+        [Parameter(ParameterSetName="InFile")]
         [ValidateSet("GET", "POST", "PUT", "PATCH","DELETE")]
         [string]$method = "GET",
 
-        [Parameter()]
+        [Parameter(ParameterSetName="Uri")]
+        [Parameter(ParameterSetName="Body")]
+        [Parameter(ParameterSetName="InFile")]
         [string]$ContentType = "application/json",
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(ParameterSetName="Uri")]
+        [Parameter(ParameterSetName="Body")]
+        [Parameter(ParameterSetName="InFile")]
         [hashtable]$AdditionalHeaders = @{}
     )
 
