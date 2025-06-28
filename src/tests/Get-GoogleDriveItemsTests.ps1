@@ -24,7 +24,7 @@ Describe "Get-GoogleDriveFile" {
         }        
 
         # act
-        $result = Get-GoogleDriveFiles
+        $result = Get-GoogleDriveItems
 
         # assert
         $result | Should -Not -BeNullOrEmpty
@@ -45,7 +45,7 @@ Describe "Get-GoogleDriveFile" {
         }
 
         # act
-        $result = Get-GoogleDriveFiles -ResultType Files
+        $result = Get-GoogleDriveItems -ResultType Files
 
         # assert
         $result | Should -Not -BeNullOrEmpty
@@ -66,7 +66,7 @@ Describe "Get-GoogleDriveFile" {
         }
 
         # act
-        $result = Get-GoogleDriveFiles -ResultType Folders
+        $result = Get-GoogleDriveItems -ResultType Folders
 
         # assert
         $result | Should -Not -BeNullOrEmpty
@@ -87,7 +87,7 @@ Describe "Get-GoogleDriveFile" {
         }
 
         # act
-        $result = Get-GoogleDriveFiles -Title "Unit Test"
+        $result = Get-GoogleDriveItems -Title "Unit Test"
 
         # assert
         $result | Should -Not -BeNullOrEmpty
@@ -108,7 +108,7 @@ Describe "Get-GoogleDriveFile" {
         }
 
         # act
-        $result = Get-GoogleDriveFiles -ParentId "parent-id"
+        $result = Get-GoogleDriveItems -ParentId "parent-id"
 
         # assert
         $result | Should -Not -BeNullOrEmpty
@@ -131,7 +131,7 @@ Describe "Get-GoogleDriveFile" {
         }
 
         # act
-        $result = Get-GoogleDriveFiles
+        $result = Get-GoogleDriveItems
 
         # assert
         $result.Count | Should -Be 4

@@ -17,7 +17,7 @@
     Optional filter to return files or folders that are children of a specific parent folder.
     If not specified, returns items from the root directory.
 #>
-function Get-GoogleDriveFiles 
+function Get-GoogleDriveItems 
 {
     [CmdletBinding()]
     param(
@@ -65,7 +65,7 @@ function Get-GoogleDriveFiles
         
         $uri = "https://www.googleapis.com/drive/v3/files?$queryString"
         
-        "Get-GoogleDriveFiles: $uri" | Write-Verbose
+        "Get-GoogleDriveItems: $uri" | Write-Verbose
 
         $result = Invoke-GApi -uri $uri
 

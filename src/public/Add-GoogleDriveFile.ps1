@@ -14,6 +14,7 @@
 
 .PARAMETER Force
     If specified, will overwrite an existing file with the same name in the target folder.
+    If not specified and the file already exists, it will return the existing file's metadata.
 
 .EXAMPLE
     Add-GoogleDriveFile -FilePath "C:\images\photo.jpg"
@@ -44,7 +45,7 @@ function Add-GoogleDriveFile {
 
     # First, find or create the upload folder in Google Drive
     Write-Verbose "Add-GoogleDriveFile: Verifying target folder: $TargetFolderName"
-    $folder = Get-GoogleDriveFiles -ResultType "Folders" -Title $TargetFolderName
+    $folder = Get-GoogleDriveItems -ResultType "Folders" -Title $TargetFolderName
 
     if (-not $folder) {
         # Create the folder if it doesn't exist
@@ -58,7 +59,7 @@ function Add-GoogleDriveFile {
 
     # Determine if the file already exists in the target folder
     Write-Verbose "Add-GoogleDriveFile: Checking if file '$FileName' already exists in folder '$TargetFolderName'"
-    $existingFile = Get-GoogleDriveFiles -ResultType "Files" -Title $FileName -ParentId $folder.id
+    $existingFile = Get-GoogleDriveItems -ResultType "Files" -Title $FileName -ParentId $folder.id
     if ($existingFile) {
         if (-not $Force) {
             # use existing file

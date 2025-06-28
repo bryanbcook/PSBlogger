@@ -15,7 +15,7 @@ Describe 'Add-GoogleDriveFile' {
         InModuleScope PSBlogger {
           # setup file doesn't exist
           # folder does not exist
-          Mock Get-GoogleDriveFiles -ParameterFilter {
+          Mock Get-GoogleDriveItems -ParameterFilter {
             $ResultType -eq "Files" -and $Title -eq "my.png"
           } { return $null }
         }
@@ -26,7 +26,7 @@ Describe 'Add-GoogleDriveFile' {
         InModuleScope PSBlogger {
 
           # folder does not exist
-          Mock Get-GoogleDriveFiles -ParameterFilter {
+          Mock Get-GoogleDriveItems -ParameterFilter {
             $ResultType -eq "Folders" -and $Title -eq "TestFolder"
           } { return $null }
 
@@ -54,7 +54,7 @@ Describe 'Add-GoogleDriveFile' {
         BeforeEach {
           InModuleScope PSBlogger {
             # folder exists
-            Mock Get-GoogleDriveFiles -ParameterFilter {
+            Mock Get-GoogleDriveItems -ParameterFilter {
               $ResultType -eq "Folders" -and $Title -eq "TestFolder"
             } { return @([pscustomobject]@{ id = "12345"; name = "TestFolder" }) }
           }
@@ -151,12 +151,12 @@ Describe 'Add-GoogleDriveFile' {
       BeforeEach {
         InModuleScope PSBlogger {
           # folder exists
-          Mock Get-GoogleDriveFiles -ParameterFilter {
+          Mock Get-GoogleDriveItems -ParameterFilter {
             $ResultType -eq "Folders" -and $Title -eq "TestFolder"
           } { return @([pscustomobject]@{ id = "12345"; name = "TestFolder" }) }
 
           # file exists
-          Mock Get-GoogleDriveFiles -ParameterFilter {
+          Mock Get-GoogleDriveItems -ParameterFilter {
             $ResultType -eq "Files" -and $Title -eq "my.png" -and $ParentId -eq "12345"
           } { return @([pscustomobject]@{ id = "67890"; name = "my.png" }) }
         }
