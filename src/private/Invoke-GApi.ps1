@@ -4,10 +4,14 @@ Function Invoke-GApi
         [Parameter(Mandatory)]
         [string]$uri,
 
+        [Parameter()]
         [string]$body,
 
+        [Parameter()]
+        [ValidateSet("GET", "POST", "PUT", "PATCH","DELETE")]
         [string]$method = "GET",
 
+        [Parameter()]
         [string]$ContentType = "application/json",
 
         [Parameter(Mandatory=$false)]
@@ -39,5 +43,5 @@ Function Invoke-GApi
 
     Write-Verbose $Body
 
-    Invoke-RestMethod @invokeArgs -Verbose
+    Invoke-RestMethod @invokeArgs
 }

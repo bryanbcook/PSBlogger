@@ -1,14 +1,34 @@
 <#
+.DESCRIPTION
+    Queries files and folders in the Google drive associated with the authenticated account
+
+.PARAMETER ResultType
+    Optional filter to specify the type of results to return. Valid values are:
+    - All: Returns all files and folders
+    - Files: Returns only files
+    - Folders: Returns only folders
+
+    Default is All.
+
+.PARAMETER Title
+    Optional filter to return files or folders with a specific title.
+
+.PARAMETER ParentId
+    Optional filter to return files or folders that are children of a specific parent folder.
+    If not specified, returns items from the root directory.
 #>
 function Get-GoogleDriveFiles 
 {
     [CmdletBinding()]
     param(
+        [Parameter()]
         [ValidateSet("All","Files","Folders")]
         [string]$ResultType = "All",
 
+        [Parameter()]
         [string]$Title,
 
+        [Parameter()]
         [string]$ParentId
     )
 
