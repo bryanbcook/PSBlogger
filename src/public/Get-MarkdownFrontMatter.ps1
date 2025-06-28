@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Obtains the Markdown FrontMatter from a Markdown file
+  Obtains the Markdown FrontMatter from a Markdown file
 
 .PARAMETER File
-Path to a valid Markdown (.md) file
+  Path to a valid Markdown (.md) file
 
 #>
 Function Get-MarkdownFrontMatter

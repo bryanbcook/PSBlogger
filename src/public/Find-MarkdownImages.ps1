@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-Finds all image references in a markdown file.
+    Finds all image references in a markdown file.
 
 .DESCRIPTION
-Parses a markdown file and extracts all image references (both inline and reference-style).
-Returns information about each image including the original markdown syntax, image path, alt text, and title.
+    Parses a markdown file and extracts all image references (both inline and reference-style).
+    Returns information about each image including the original markdown syntax, image path, alt text, and title.
 
 .PARAMETER File
-The path to the markdown file to analyze.
+    The path to the markdown file to analyze.
 
 .EXAMPLE
-Find-MarkdownImages -File "post.md"
+    Find-MarkdownImages -File "post.md"
 #>
 function Find-MarkdownImages {
     [CmdletBinding()]

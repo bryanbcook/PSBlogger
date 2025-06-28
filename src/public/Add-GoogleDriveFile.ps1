@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Uploads a file to Google Drive in a specified folder with public permissions.
+    Uploads a file to Google Drive in a specified folder.
 
 .DESCRIPTION
     Uploads a file to Google Drive, places it in the "Open Live Writer" subfolder,
-    preserves the original filename, and sets public read permissions.
+    preserves the original filename.
 
 .PARAMETER FilePath
     The local path to the file to upload.

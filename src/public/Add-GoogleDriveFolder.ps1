@@ -3,16 +3,16 @@
 Creates a new folder in Google Drive.
 
 .DESCRIPTION
-Creates a new folder in Google Drive with the specified name.
+    Creates a new folder in Google Drive with the specified name.
 
 .PARAMETER Name
-The name of the folder to create.
+    The name of the folder to create.
 
 .PARAMETER ParentId
-Optional parent folder ID. If not specified, creates in root.
+    Optional parent folder ID. If not specified, creates in root.
 
 .EXAMPLE
-New-GoogleDriveFolder -Name "Open Live Writer"
+    New-GoogleDriveFolder -Name "Open Live Writer"
 #>
 function Add-GoogleDriveFolder {
     [CmdletBinding()]
