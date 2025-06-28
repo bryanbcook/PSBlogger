@@ -127,7 +127,7 @@ function Add-GoogleDriveFile {
         return New-GoogleDriveMetadata -id $uploadResult.id -name $uploadResult.name
     }
     catch {
-        Write-Error "Failed to upload file to Google Drive: $($_.Exception.Message). $($_.ErrorDetails | ConvertTo-Json -Depth 10)"
+        Write-Error "Failed to upload file to Google Drive: $($_.Exception.Message). $($_.ErrorDetails | ConvertTo-Json -Depth 10)" -ErrorAction Stop
     }
 }
 

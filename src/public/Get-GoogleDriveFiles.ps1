@@ -65,7 +65,7 @@ function Get-GoogleDriveFiles
         
         $uri = "https://www.googleapis.com/drive/v3/files?$queryString"
         
-        Write-Verbose $uri
+        "Get-GoogleDriveFiles: $uri" | Write-Verbose
 
         $result = Invoke-GApi -uri $uri
 

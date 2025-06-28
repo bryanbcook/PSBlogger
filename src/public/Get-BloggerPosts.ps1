@@ -24,6 +24,6 @@ Function Get-BloggerPosts
         $result.items            
     }
     catch {
-        Write-Error $_.ToString()
+        Write-Error $_.ToString() -ErrorAction Stop
     }
 }

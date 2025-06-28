@@ -59,9 +59,7 @@ function Assert-CredentialCache
     {
         Write-Verbose "Assert-CredentialCache: Initializing session with cached access+refresh tokens..."
         if (-not (Test-Path $BloggerSession.CredentialCache)) {
-            Write-Error "Cached credentials not found. Please call Initialize-Blogger"
-            # todo: verify ErrorActionPreference is set
-            throw "Cached credentials not found. Please call Initialize-Blogger"
+            Write-Error "Cached credentials not found. Please call Initialize-Blogger" -ErrorAction Stop
         }
 
         $cache = Get-CredentialCache

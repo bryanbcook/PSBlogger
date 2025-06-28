@@ -51,6 +51,6 @@ Function Set-MarkdownFrontMatter
   }
   catch {
     $errorMessage = $_.ToString()
-    Write-Error "Couldn't update markdown file: $errorMessage"
+    Write-Error "Couldn't update markdown file: $errorMessage" -ErrorAction Stop
   }  
 }

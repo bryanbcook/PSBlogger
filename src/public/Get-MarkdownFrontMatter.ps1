@@ -45,6 +45,6 @@ Function Get-MarkdownFrontMatter
   }
   catch {
     $errorMessage = $_.ToString()
-    Write-Error "Error parsing yaml front matter in $($File): $errorMessage"
+    Write-Error "Error parsing yaml front matter in $($File): $errorMessage" -ErrorAction Stop
   }
 }
