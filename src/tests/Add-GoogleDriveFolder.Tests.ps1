@@ -1,9 +1,11 @@
+Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+
 Describe "Add-GoogleDriveFolder" {
   BeforeEach {
     Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
-  InModuleScope PSBlogger {
+  InModuleScope "PSBlogger" {
 
     BeforeEach {
       # prevent actual API calls during tests
@@ -41,5 +43,6 @@ Describe "Add-GoogleDriveFolder" {
       }
 
     }
+
   }
 }
