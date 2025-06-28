@@ -28,33 +28,36 @@ Function Publish-MarkdownBloggerPost
   $postInfo = Get-MarkdownFrontMatter -File $File
 
   # Process images: detect, upload to Google Drive, and update markdown
+  $imageMappings = @()
   $images = Find-MarkdownImages -File $File
   if ($images -and $images.Count -gt 0) {
     Write-Verbose "Found $($images.Count) local images to upload to Google Drive"
+
+    $anonymous = New-GoogleDriveFilePermission -role "reader" -type "anyone"
     
-    $imageMappings = @()
     foreach ($image in $images) {
       try {
         Write-Verbose "Uploading image: $($image.FileName)"
-        $uploadResult = Add-GoogleDriveImageFile -FilePath $image.LocalPath -FileName $image.FileName
-        
-        $imageMappings += [PSCustomObject]@{
-          OriginalMarkdown = $image.OriginalMarkdown
-          NewUrl = $uploadResult.PublicUrl
-          AltText = $image.AltText
-          Title = $image.Title
+        $uploadResult = Add-GoogleDriveFile -FilePath $image.LocalPath -FileName $image.FileName
+        if (!$uploadResult) {
+          Write-Warning "Failed to upload image $($image.FileName)"
+          continue
         }
+        Set-GoogleDriveFilePermission -FileId $uploadResult.id -Permission $anonymous | Out-Null
+        
+        $image.NewUrl = $uploadResult.PublicUrl
+        $imageMappings += $image
         
         Write-Verbose "Successfully uploaded: $($image.FileName) -> $($uploadResult.PublicUrl)"
       }
       catch {
-        Write-Warning "Failed to upload image $($image.FileName): $($_.Exception.Message)"
+        Write-Warning "Failed to upload image $($image.FileName): $($_.Exception.Message)$([Environment]::NewLine)$($_.ErrorDetails | ConvertTo-Json -Depth 10)"
       }
     }
     
     # Update the markdown file with new URLs
-    if ($imageMappings.Count -gt 0) {
-      $updated = Update-MarkdownImageUrls -File $File -ImageMappings $imageMappings
+    if ($imageMappings -and $imageMappings.Count -gt 0) {
+      $updated = Update-MarkdownImages -File $File -ImageMappings $imageMappings
       if ($updated) {
         Write-Verbose "Updated markdown file with $($imageMappings.Count) new image URLs"
       }
