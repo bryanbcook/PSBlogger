@@ -1,11 +1,15 @@
 Function Invoke-GApi
 {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [string]$uri,
 
-        [Parameter()]
+        [Parameter(ParameterSetName="Body")]
         [string]$body,
+
+        [Parameter(ParameterSetName="InFile")]
+        [string]$InFile,
 
         [Parameter()]
         [ValidateSet("GET", "POST", "PUT", "PATCH","DELETE")]
@@ -34,14 +38,15 @@ Function Invoke-GApi
     }
 
     if ($body) {
-
         if ($method -eq "GET") {
             $invokeArgs.Method = "POST"
         }
         $invokeArgs.Body = $body
     }
+    if ($InFile) {
+        $invokeArgs.InFile = $InFile
+    }
 
-    Write-Verbose $Body
 
     Invoke-RestMethod @invokeArgs
 }
