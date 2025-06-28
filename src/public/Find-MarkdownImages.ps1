@@ -49,16 +49,36 @@ function Find-MarkdownImages {
         
         # Check if the file exists
         if (Test-Path -Path $resolvedPath -PathType Leaf) {
-            $images += [PSCustomObject]@{
-                OriginalMarkdown = $match.Value
-                AltText = $altText
-                LocalPath = $resolvedPath
-                RelativePath = $imagePath
-                Title = $title
-                FileName = Split-Path -Path $resolvedPath -Leaf
-            }
+            $images += New-MarkdownImage `
+                -OriginalMarkdown $match.Value `
+                -AltText $altText `
+                -LocalPath $resolvedPath `
+                -RelativePath $imagePath `
+                -Title $title `
+                -FileName $(Split-Path -Path $resolvedPath -Leaf)
         }
     }
 
     return $images
+}
+
+Function New-MarkdownImage
+{
+    param(
+        [string]$OriginalMarkdown,
+        [string]$AltText,
+        [string]$LocalPath,
+        [string]$RelativePath,
+        [string]$Title = "",
+        [string]$FileName
+    )
+    return [PSCustomObject]@{
+        OriginalMarkdown = $OriginalMarkdown
+        AltText = $AltText
+        LocalPath = $LocalPath
+        RelativePath = $RelativePath
+        Title = $Title
+        FileName = $FileName
+        NewUrl = $null  # This will be set after uploading to Google Drive
+    }
 }

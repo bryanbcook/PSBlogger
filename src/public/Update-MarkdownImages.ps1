@@ -19,7 +19,7 @@ $mappings = @(
 )
 Update-MarkdownImageUrls -File "post.md" -ImageMappings $mappings
 #>
-function Update-MarkdownImageUrls {
+function Update-MarkdownImages {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
@@ -27,10 +27,15 @@ function Update-MarkdownImageUrls {
         [string]$File,
         
         [Parameter(Mandatory=$true)]
-        [array]$ImageMappings
-    )
+        [array]$ImageMappings,
 
-    $content = Get-Content -Path $File -Raw
+        [Parameter()]
+        [string]$OutFile
+    )
+    $TargetFile = $File
+
+    Write-Verbose "UpdateMarkdownImages: Processing file $TargetFile with $($ImageMappings.Count) image mappings"
+    $content = Get-Content -Path $TargetFile -Raw
     $originalContent = $content
 
     foreach ($mapping in $ImageMappings) {
@@ -50,10 +55,16 @@ function Update-MarkdownImageUrls {
         $content = $content -replace [regex]::Escape($originalMarkdown), $newMarkdown
     }
 
+    # If OutFile is specified, write the updated content to that file
+    if ($OutFile) {
+        Write-Verbose "UpdateMarkdownImages: Changing output file from $File to $OutFile"
+        $TargetFile = $OutFile
+    }
+
     # Only write the file if content has changed
     if ($content -ne $originalContent) {
-        Set-Content -Path $File -Value $content -NoNewline
-        Write-Verbose "Updated markdown file: $File"
+        Set-Content -Path $TargetFile -Value $content -NoNewline
+        Write-Verbose "Updated markdown file: $TargetFile"
         return $true
     } else {
         Write-Verbose "No changes made to markdown file: $File"
