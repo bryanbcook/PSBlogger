@@ -14,7 +14,7 @@ Optional parent folder ID. If not specified, creates in root.
 .EXAMPLE
 New-GoogleDriveFolder -Name "Open Live Writer"
 #>
-function New-GoogleDriveFolder {
+function Add-GoogleDriveFolder {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
@@ -23,6 +23,8 @@ function New-GoogleDriveFolder {
         [Parameter(Mandatory=$false)]
         [string]$ParentId
     )
+
+    Write-Verbose ("Creating folder '$Name' {0}" -f ($ParentId ? "in parent '$ParentId'" : "in root"))
 
     $metadata = @{
         name = $Name
@@ -33,15 +35,13 @@ function New-GoogleDriveFolder {
         $metadata.parents = @($ParentId)
     }
 
-    $body = $metadata | ConvertTo-Json
+    $body = $metadata | ConvertTo-Json -Compress
     $uri = "https://www.googleapis.com/drive/v3/files"
     
     try {
-        $result = Invoke-GApi -uri $uri -body $body -method "POST"
-        return $result
+        return Invoke-GApi -uri $uri -body $body -Verbose:$false
     }
     catch {
-        Write-Error "Failed to create folder in Google Drive: $($_.Exception.Message)"
-        throw
+        Write-Error "Failed to create folder in Google Drive: $($_.Exception.Message)" -ErrorAction Stop
     }
 }
