@@ -1,3 +1,13 @@
+<#
+.DESCRIPTION
+  Retrieves a list of posts from a specified Blogger blog.
+
+.PARAMETER BlogId
+  The ID of the blog to retrieve posts from. If not specified, uses the BlogId in the user preferences.
+
+.PARAMETER Status
+  The status of the posts to retrieve. Valid values are "draft", "live", and "scheduled"
+#>
 Function Get-BloggerPosts
 {
     [CmdletBinding()]
@@ -24,6 +34,6 @@ Function Get-BloggerPosts
         $result.items            
     }
     catch {
-        Write-Error $_.ToString()
+        Write-Error $_.ToString() -ErrorAction Stop
     }
 }

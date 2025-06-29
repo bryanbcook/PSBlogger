@@ -22,11 +22,11 @@ function Get-GoogleAccessToken
 
     try {
 
-        Write-Verbose "Fetching Access Token with short-lived expiry..."
+        Write-Verbose "Get-GoogleAccessToken: Fetching Access Token with short-lived expiry..."
 
         $requestUri = "https://www.googleapis.com/oauth2/v4/token"
 
-        $tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Body $body -ContentType "application/x-www-form-urlencoded"
+        $tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Body $body -ContentType "application/x-www-form-urlencoded" -Verbose:$false
         
         $tokens
     }
@@ -52,11 +52,11 @@ function Update-GoogleAccessToken
 
     $requestUri = "https://www.googleapis.com/oauth2/v4/token"
 
-    Write-Verbose "Upgrading token using refresh-token..."
+    Write-Verbose "Update-GoogleAccessToken: Upgrading token using refresh-token..."
 
     $tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Body $body -ContentType "application/x-www-form-urlencoded"
 
-    Write-Verbose "Received token: $tokens"
+    Write-Verbose "Update-GoogleAccessToken: Received token: $tokens"
 
     $tokens
 }
@@ -69,14 +69,15 @@ function Test-GoogleAccessToken
     )
 
     try {
-        Write-Verbose "Validating access-token"
+        Write-Verbose "Test-GoogleAccessToken: Validating access-token"
 
         $uri = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=$accessToken"
-        Invoke-RestMethod -Uri $uri
+        Invoke-RestMethod -Uri $uri -Verbose:$false
+        Write-Verbose "Test-GoogleAccessToken: Valid"
         $true
     }
     catch {
-        Write-Verbose "Access token is not valid"
+        Write-Verbose "Test-GoogleAccessToken: Access token is not valid"
         $false
     }
 }

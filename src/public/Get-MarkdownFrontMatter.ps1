@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Obtains the Markdown FrontMatter from a Markdown file
+  Obtains the Markdown FrontMatter from a Markdown file
 
 .PARAMETER File
-Path to a valid Markdown (.md) file
+  Path to a valid Markdown (.md) file
 
 #>
 Function Get-MarkdownFrontMatter
@@ -45,6 +45,6 @@ Function Get-MarkdownFrontMatter
   }
   catch {
     $errorMessage = $_.ToString()
-    Write-Error "Error parsing yaml front matter in $($File): $errorMessage"
+    Write-Error "Error parsing yaml front matter in $($File): $errorMessage" -ErrorAction Stop
   }
 }

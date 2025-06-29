@@ -159,4 +159,41 @@ postId: "123456"
     $postInfo = Get-MarkdownFrontMatter $validFile
     $postInfo.postid | Should -Be "post1" -Because "Markdown file should be updated with post id after publishing for the first time."
   }
+
+  Context "Upload Images to Google Drive" {
+
+    BeforeEach {
+      InModuleScope "PSBlogger" {
+
+        Mock Add-GoogleDriveFile -Verifiable {
+          return @{
+            id = "12345"
+            PublicUrl = "https://drive.google.com/12345"
+          }
+        }
+        Mock Set-GoogleDriveFilePermission -Verifiable {}
+
+        Mock Publish-BloggerPost { @{ id = "1234"} }
+      }
+    }
+
+    It "Should upload images and update markdown in place" {
+      # arrange
+      $testFile = "TestDrive:\testfile.md"
+      $imagePath = "TestDrive:\image.png"
+      Set-Content -Path $testFile -Value "# hello world$([Environment]::NewLine)Your image ![image](image.png)"
+      Set-Content -Path $imagePath -Value "dummy image content"
+
+      # act
+      $actualFile = Resolve-Path $testFile
+      Publish-MarkdownBloggerPost -File $actualFile -BlogId 1234
+
+      # assert
+      Should -InvokeVerifiable
+      $updatedContent = Get-Content -Path $testFile -Raw
+      $escapedRegex = [regex]::Escape("![image](https://drive.google.com/12345)")
+      $updatedContent | Should -Match $escapedRegex
+    }
+
+  }
 }

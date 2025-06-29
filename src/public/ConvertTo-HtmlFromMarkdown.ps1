@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-Convert a file to Markdown using Pandoc
+    Convert a file to Markdown using Pandoc
 
 .PARAMETER File
-The file path of the markdown file
+    The file path of the markdown file
 
 .PARAMETER OutFile
-The resulting html. If this parameter is not specified an HTML file with the same name of the markdown file will be created.
+    The resulting html. If this parameter is not specified an HTML file with the same name of the markdown file will be created.
 
 #>
 function ConvertTo-HtmlFromMarkdown

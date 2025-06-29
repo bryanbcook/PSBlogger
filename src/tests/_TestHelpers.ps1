@@ -18,3 +18,26 @@ function New-BlogPost($id) {
 Function New-FrontMatter([string[]]$lines) {
   return "---`n" + ($lines -join "`n") + "`n---`n"
 }
+
+Function New-MarkdownImage
+{
+    param(
+        [string]$OriginalMarkdown,
+        [string]$AltText,
+        [string]$LocalPath,
+        [string]$RelativePath,
+        [string]$Title = "",
+        [string]$FileName,
+        [string]$NewUrl
+
+    )
+    return [PSCustomObject]@{
+        OriginalMarkdown = $OriginalMarkdown
+        AltText = $AltText
+        LocalPath = $LocalPath
+        RelativePath = $RelativePath
+        Title = $Title
+        FileName = $FileName
+        NewUrl = $NewUrl
+    }
+}
