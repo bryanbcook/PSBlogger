@@ -1,0 +1,45 @@
+{
+    "name": "PowerShell Development (Windows)",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:8.0-windowsservercore-ltsc2022",
+    
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.powershell",
+                "ms-vscode.vscode-json",
+                "redhat.vscode-yaml",
+                "ms-vscode.test-adapter-converter",
+                "hbenl.vscode-test-explorer"
+            ],
+            "settings": {
+                "powershell.integratedConsole.showOnStartup": false,
+                "powershell.enableProfileLoading": false,
+                "terminal.integrated.defaultProfile.windows": "PowerShell",
+                "terminal.integrated.profiles.windows": {
+                    "PowerShell": {
+                        "source": "PowerShell",
+                        "args": ["-NoLogo"]
+                    },
+                    "Command Prompt": {
+                        "path": [
+                            "${env:windir}\\System32\\cmd.exe"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+
+    "postCreateCommand": "powershell -Command \"Install-Module -Name Pester -Force -Scope CurrentUser; Install-Module -Name powershell-yaml -Force -Scope CurrentUser\"",
+
+    "remoteUser": "vscode",
+    
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspaces/PSBlogger,type=bind,consistency=cached"
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PowerShell: Launch Current File",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${workspaceFolder}/src"
+        },
+        {
+            "name": "PowerShell: Interactive Session",
+            "type": "PowerShell",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src"
+        },
+        {
+            "name": "PowerShell: Launch Pester Tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester",
+            "args": [
+                "-Path", "./tests",
+                "-Output", "Detailed"
+            ],
+            "cwd": "${workspaceFolder}/src"
+        }
+    ]
+}

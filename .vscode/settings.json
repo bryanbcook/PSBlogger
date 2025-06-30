@@ -1,0 +1,26 @@
+{
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.enableProfileLoading": false,
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.codeFormatting.preset": "OTBS",
+    "files.associations": {
+        "*.ps1": "powershell",
+        "*.psm1": "powershell",
+        "*.psd1": "powershell"
+    },
+    "terminal.integrated.profiles.windows": {
+        "pwsh": {
+            "path": "pwsh"
+        },
+        "PowerShell": {
+            "source": "PowerShell",
+            "args": ["-NoLogo"]
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\System32\\cmd.exe"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "pwsh"
+}

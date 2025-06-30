@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run All Pester Tests",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-Command",
+                "Import-Module Pester; Invoke-Pester -Path './src/tests' -Output Detailed"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Current Test File",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-Command",
+                "Import-Module Pester; Invoke-Pester -Path '${file}' -Output Detailed"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
