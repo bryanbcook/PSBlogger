@@ -2,30 +2,34 @@ Function Set-BloggerConfig
 {
   [CmdletBinding()]
   Param(
+    [Parameter(Mandatory=$true)]
     [ValidateSet("BlogId","PandocAdditionalArgs","PandocHtmlFormat","PandocMarkdownFormat")]
     [string]$Name,
 
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
     [string]$Value
   )
-
-  $userPreferences = @{}
+  $userPreferences = [pscustomobject]@{}
 
   if (Test-Path $BloggerSession.UserPreferences)
   {
-    Write-Verbose "Loading preferences from $($BloggerSession.UserPreferences)"
-    $userPreferences = Get-Content $BloggerSession.UserPreferences | ConvertFrom-Json
+    Write-Verbose "Set-BloggerConfig: Loading preferences from $($BloggerSession.UserPreferences)"
+    $userPreferences = [pscustomobject](Get-Content $BloggerSession.UserPreferences -Raw | ConvertFrom-Json)
+    $userPreferences | Out-String | Write-Verbose
   }
 
-  if ($userPreferences.PsObject.Properties.Name -notcontains $Name)
+  if (@($userPreferences.PsObject.Properties).Count -eq 0 -or $Name -notin $userPreferences.PsObject.Properties.Name)
   {
-    Write-Verbose "Adding Property $Name"
+    Write-Verbose "Set-BloggerConfig: Adding Property $Name"
     $userPreferences | Add-Member -Name $Name -Value $Value -MemberType NoteProperty
   }
   else {
-    Write-Verbose "Updating Propery $Name"
+    Write-Verbose "Set-BloggerConfig: Updating Propery $Name"
     $userPreferences.$Name = $Value
   }  
 
+  Write-Verbose "Set-BloggerConfig: Saving preferences to $($BloggerSession.UserPreferences)"
   Set-Content -Path $BloggerSession.UserPreferences -Value ($userPreferences | ConvertTo-Json)
   $BloggerSession.$Name = $Value
 }
