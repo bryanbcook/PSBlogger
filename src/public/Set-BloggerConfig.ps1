@@ -16,7 +16,7 @@ Function Set-BloggerConfig
     $userPreferences = Get-Content $BloggerSession.UserPreferences | ConvertFrom-Json
   }
 
-  if ($userPreferences.PsObject.Properties.Name -notcontains $Name)
+  if ($Name -notin $userPreferences.PsObject.Properties.Name)
   {
     Write-Verbose "Adding Property $Name"
     $userPreferences | Add-Member -Name $Name -Value $Value -MemberType NoteProperty
