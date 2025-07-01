@@ -148,7 +148,7 @@ Third image:
   }
 
   Context "Filtering and validation" {
-    It "Should skip HTTP URLs" {
+    It "Should skip images that are already web hosted (HTTP/HTTPS)" {
       $markdownFile = "TestDrive:\with-urls.md"
       $markdownContent = @"
 ![Local image](test-image1.png)
@@ -274,6 +274,186 @@ No images here!
       $image.Title | Should -Be "Test Title"
       $image.FileName | Should -Be "test-image1.png"
       $image.LocalPath | Should -BeLike "*test-image1.png"
+    }
+  }
+
+  Context "Obsidian image format support" {
+
+    BeforeAll {
+      $obsidianTestCases = @(
+        @{
+          Name = "Basic Obsidian format without alt text"
+          Content = "![[test-image1.png]]"
+          ExpectedCount = 1
+          ExpectedAltText = ""
+          ExpectedFileName = "test-image1.png"
+          ExpectedOriginal = "![[test-image1.png]]"
+        },
+        @{
+          Name = "Obsidian format with alt text"
+          Content = "![[test-image1.png|My Alt Text]]"
+          ExpectedCount = 1
+          ExpectedAltText = "My Alt Text"
+          ExpectedFileName = "test-image1.png"
+          ExpectedOriginal = "![[test-image1.png|My Alt Text]]"
+        },
+        @{
+          Name = "Obsidian format with subfolder path"
+          Content = "![[subfolder/test-image2.jpg|Image in subfolder]]"
+          ExpectedCount = 1
+          ExpectedAltText = "Image in subfolder"
+          ExpectedFileName = "test-image2.jpg"
+          ExpectedOriginal = "![[subfolder/test-image2.jpg|Image in subfolder]]"
+        },
+        @{
+          Name = "Obsidian format with empty alt text after pipe"
+          Content = "![[test-image1.png|]]"
+          ExpectedCount = 1
+          ExpectedAltText = ""
+          ExpectedFileName = "test-image1.png"
+          ExpectedOriginal = "![[test-image1.png|]]"
+        },
+        @{
+          Name = "Multiple Obsidian images"
+          Content = @"
+![[test-image1.png|First image]]
+Some text here
+![[subfolder/test-image2.jpg]]
+More text
+![[test-image1.png|Duplicate image]]
+"@
+          ExpectedCount = 3
+          ExpectedAltText = @("First image", "", "Duplicate image")
+          ExpectedFileName = @("test-image1.png", "test-image2.jpg", "test-image1.png")
+        }
+      )
+    }
+
+    It "Should handle <Name>" -TestCases $obsidianTestCases {
+      param($Name, $Content, $ExpectedCount, $ExpectedAltText, $ExpectedFileName, $ExpectedOriginal)
+      
+      $markdownFile = "TestDrive:\obsidian-test.md"
+      Set-MarkdownFile $markdownFile $Content
+
+      $result = Find-MarkdownImages -File $markdownFile
+
+      $result.Count | Should -Be $ExpectedCount
+      
+      if ($ExpectedCount -eq 1) {
+        $result[0].AltText | Should -Be $ExpectedAltText
+        $result[0].FileName | Should -Be $ExpectedFileName
+        $result[0].Title | Should -Be ""  # Obsidian format doesn't support titles
+        if ($ExpectedOriginal) {
+          $result[0].OriginalMarkdown | Should -Be $ExpectedOriginal
+        }
+      } elseif ($ExpectedCount -gt 1) {
+        for ($i = 0; $i -lt $ExpectedCount; $i++) {
+          $result[$i].AltText | Should -Be $ExpectedAltText[$i]
+          $result[$i].Format | Should -Be $ExpectedFormat[$i]
+          $result[$i].FileName | Should -Be $ExpectedFileName[$i]
+          $result[$i].Title | Should -Be ""
+        }
+      }
+    }
+
+    It "Should skip Obsidian images with HTTP URLs" {
+      $markdownFile = "TestDrive:\obsidian-urls.md"
+      $markdownContent = @"
+![[test-image1.png|Local image]]
+![[http://example.com/image.jpg|HTTP image]]
+![[https://example.com/image.png|HTTPS image]]
+"@
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      $result = Find-MarkdownImages -File $markdownFile
+
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-image1.png"
+    }
+
+    It "Should skip non-existent Obsidian images" {
+      $markdownFile = "TestDrive:\obsidian-missing.md"
+      $markdownContent = @"
+![[test-image1.png|Existing image]]
+![[does-not-exist.jpg|Missing image]]
+![[subfolder/test-image2.jpg|Another existing]]
+"@
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      $result = Find-MarkdownImages -File $markdownFile
+
+      $result.Count | Should -Be 2
+      $result[0].FileName | Should -Be "test-image1.png"
+      $result[1].FileName | Should -Be "test-image2.jpg"
+    }
+
+    It "Should not find embedded markdown content" {
+      # arrange
+      # obsidian can link content from an external file as an embedded markdown block
+      $markdownFile = "TestDrive:\obsidian-embedded.md"
+      $markdownContent = "![[Embedded Markdown Page|Title]]"
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
+      $result.Count | Should -Be 0
+    }
+  }
+
+  Context "Mixed format support (Standard + Obsidian)" {
+    BeforeAll {
+      $mixedFormatTestCases = @(
+        @{
+          Name = "Both standard and Obsidian in same file"
+          Content = @"
+![Standard image](test-image1.png "Standard title")
+![[test-image1.png|Obsidian image]]
+![Another standard](subfolder/test-image2.jpg)
+![[subfolder/test-image2.jpg]]
+"@
+          ExpectedCount = 4
+          ExpectedAltTexts = @("Standard image", "Obsidian image", "Another standard", "")
+          ExpectedTitles = @("Standard title", "", "", "")
+        },
+        @{
+          Name = "Standard format only"
+          Content = @"
+![Image 1](test-image1.png)
+![Image 2](subfolder/test-image2.jpg "With title")
+"@
+          ExpectedCount = 2
+          ExpectedAltTexts = @("Image 1", "Image 2")
+          ExpectedTitles = @("", "With title")
+        },
+        @{
+          Name = "Obsidian format only"
+          Content = @"
+![[test-image1.png|Alt 1]]
+![[subfolder/test-image2.jpg]]
+"@
+          ExpectedCount = 2
+          ExpectedAltTexts = @("Alt 1", "")
+          ExpectedTitles = @("", "")
+        }
+      )
+    }
+
+    It "Should handle <Name>" -TestCases $mixedFormatTestCases {
+      param($Name, $Content, $ExpectedCount, $ExpectedAltTexts, $ExpectedTitles)
+      
+      $markdownFile = "TestDrive:\mixed-format-test.md"
+      Set-MarkdownFile $markdownFile $Content
+
+      $result = Find-MarkdownImages -File $markdownFile
+
+      $result.Count | Should -Be $ExpectedCount
+      
+      for ($i = 0; $i -lt $ExpectedCount; $i++) {
+        $result[$i].AltText | Should -Be $ExpectedAltTexts[$i]
+        $result[$i].Title | Should -Be $ExpectedTitles[$i]
+      }
     }
   }
 }

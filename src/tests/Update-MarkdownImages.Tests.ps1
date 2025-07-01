@@ -1,4 +1,3 @@
-
 Describe "Update-MarkdownImages" {
   BeforeAll {
      Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
@@ -65,6 +64,151 @@ Describe "Update-MarkdownImages" {
       $outputContent | Should -Not -Be $inputContent
     }
 
+  }
+
+  Context "Mixed format image replacement" {
+    BeforeAll {
+      $mixedFormatTestCases = @(
+        @{
+          Name = "Standard markdown format"
+          Original = "![Alt text](image.png)"
+          AltText = "Alt text"
+          Title = ""
+          NewUrl = "https://drive.google.com/uc?export=view&id=123"
+          Expected = "![Alt text](https://drive.google.com/uc?export=view&id=123)"
+        },
+        @{
+          Name = "Standard markdown with title"
+          Original = '![Alt text](image.png "Image title")'
+          AltText = "Alt text"
+          Title = "Image title"
+          NewUrl = "https://drive.google.com/uc?export=view&id=123"
+          Expected = '![Alt text](https://drive.google.com/uc?export=view&id=123 "Image title")'
+        },
+        @{
+          Name = "Obsidian format without alt text"
+          Original = "![[image.png]]"
+          AltText = ""
+          Title = ""
+          NewUrl = "https://drive.google.com/uc?export=view&id=456"
+          Expected = "![](https://drive.google.com/uc?export=view&id=456)"
+        },
+        @{
+          Name = "Obsidian format with alt text"
+          Original = "![[image.png|My image]]"
+          AltText = "My image"
+          Title = ""
+          NewUrl = "https://drive.google.com/uc?export=view&id=456"
+          Expected = "![My image](https://drive.google.com/uc?export=view&id=456)"
+        },
+        @{
+          Name = "Obsidian format with empty alt text after pipe"
+          Original = "![[image.png|]]"
+          AltText = ""
+          Title = ""
+          NewUrl = "https://drive.google.com/uc?export=view&id=456"
+          Expected = "![](https://drive.google.com/uc?export=view&id=456)"
+        }
+      )
+    }
+
+    It "Should handle <Name>" -TestCases $mixedFormatTestCases {
+      param($Name, $Original, $AltText, $Title, $NewUrl, $Expected)
+      
+      # arrange
+      $testFile = "TestDrive:\mixed-format-test.md"
+      $content = @(
+        "# Test Post"
+        ""
+        "Before image"
+        $Original
+        "After image"
+      ) -join [System.Environment]::NewLine
+      Set-Content -Path $testFile -Value $content
+
+      $imageMapping = New-MarkdownImage `
+        -OriginalMarkdown $Original `
+        -AltText $AltText `
+        -Title $Title `
+        -NewUrl $NewUrl
+
+      # act
+      $result = Update-MarkdownImages -File $testFile -ImageMappings @($imageMapping)
+
+      # assert
+      $result | Should -Be $true
+      $updatedContent = Get-Content -Path $testFile -Raw
+      $updatedContent | Should -Match ([regex]::Escape($Expected))
+      $updatedContent | Should -Not -Match ([regex]::Escape($Original))
+    }
+
+    It "Should handle multiple images of different formats in one file" {
+      # arrange
+      $testFile = "TestDrive:\multiple-formats.md"
+      $content = @(
+        "# Test Post"
+        ""
+        "Standard: ![Standard alt](standard.png)"
+        "Obsidian: ![[obsidian.jpg|Obsidian alt]]"
+        "Another standard: ![Another](another.gif `"With title`")"
+        "Another Obsidian: ![[another-obsidian.png]]"
+      ) -join [System.Environment]::NewLine
+      Set-Content -Path $testFile -Value $content
+
+      $imageMappings = @(
+        (New-MarkdownImage -OriginalMarkdown "![Standard alt](standard.png)" -AltText "Standard alt" -Title "" -NewUrl "https://example.com/1"),
+        (New-MarkdownImage -OriginalMarkdown "![[obsidian.jpg|Obsidian alt]]" -AltText "Obsidian alt" -Title "" -NewUrl "https://example.com/2"),
+        (New-MarkdownImage -OriginalMarkdown '![Another](another.gif "With title")' -AltText "Another" -Title "With title" -NewUrl "https://example.com/3"),
+        (New-MarkdownImage -OriginalMarkdown "![[another-obsidian.png]]" -AltText "" -Title "" -NewUrl "https://example.com/4")
+      )
+
+      # act
+      $result = Update-MarkdownImages -File $testFile -ImageMappings $imageMappings
+
+      # assert
+      $result | Should -Be $true
+      $updatedContent = Get-Content -Path $testFile -Raw
+      
+      # Check that all images were converted to standard format
+      $updatedContent | Should -Match "!\[Standard alt\]\(https://example\.com/1\)"
+      $updatedContent | Should -Match "!\[Obsidian alt\]\(https://example\.com/2\)"
+      $updatedContent | Should -Match "!\[Another\]\(https://example\.com/3 `"With title`"\)"
+      $updatedContent | Should -Match "!\[\]\(https://example\.com/4\)"
+      
+      # Verify original formats are gone
+      $updatedContent | Should -Not -Match "\!\[\[.*\]\]"
+    }
+
+    It "Should preserve content that doesn't match any mappings" {
+      # arrange
+      $testFile = "TestDrive:\partial-replacement.md"
+      $content = @(
+        "# Test Post"
+        ""
+        "This will be replaced: ![Replace me](replace.png)"
+        "This won't be replaced: ![Keep me](keep.png)"
+        "Neither will this: ![[keep-obsidian.jpg|Keep this too]]"
+      ) -join [System.Environment]::NewLine
+      Set-Content -Path $testFile -Value $content
+
+      $imageMapping = @(
+        New-MarkdownImage -OriginalMarkdown "![Replace me](replace.png)" -AltText "Replace me" -Title "" -NewUrl "https://example.com/replaced"
+      )
+
+      # act
+      $result = Update-MarkdownImages -File $testFile -ImageMappings $imageMapping
+
+      # assert
+      $result | Should -Be $true
+      $updatedContent = Get-Content -Path $testFile -Raw
+      
+      # Check replacement occurred
+      $updatedContent | Should -Match "!\[Replace me\]\(https://example\.com/replaced\)"
+      
+      # Check other content preserved
+      $updatedContent | Should -Match "!\[Keep me\]\(keep\.png\)"
+      $updatedContent | Should -Match "!\[\[keep-obsidian\.jpg\|Keep this too\]\]"
+    }
   }
 }
 

@@ -68,17 +68,28 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
 
 ## Image Support
 
-PSBlogger supports Google Drive for hosting your images.
+PSBlogger supports Google Drive for hosting your images and handles both standard markdown and Obsidian image formats.
+
+### Supported Image Formats
+
+PSBlogger can detect and process images in both formats:
+
+- **Standard Markdown**: `![alt text](image.png "optional title")`
+- **Obsidian Format**: `![[image.png|alt text]]`
+
+When publishing, all images are converted to standard markdown format with Google Drive URLs, ensuring compatibility across platforms.
+
+### Google Drive Integration
 
 - Add-GoogleDriveFile: Uploads a file to your Google Drive
 - Add-GoogleDriveFolder: Creates a folder in your Google Drive
 - Get-GoogleDriveItems: Query the contents of your Google Drive
 - Set-GoogleDriveFilePermission: Modifes the permission of a file.
 
-Markdown methods for managing images.
+### Markdown Image Management
 
-- Find-MarkdownImages: scans the markdown file to locate images in the content.
-- Update-MarkdownImages: updates the content in the markdown file with updated urls
+- Find-MarkdownImages: scans the markdown file to locate images in both standard and Obsidian formats
+- Update-MarkdownImages: updates the content in the markdown file with updated urls, converting all formats to standard markdown
 
 ## Future
 
