@@ -20,11 +20,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install Pester
+    - name: Install PowerShell Module Dependencies
       shell: pwsh
       run: |
         Set-PSRepository PSGallery -InstallationPolicy Trusted
         Install-Module -Name Pester -Force -SkipPublisherCheck
+        Install-Module -Name PowerShell-Yaml -Force -SkipPublisherCheck
         
     - name: Run Pester Tests
       shell: pwsh
