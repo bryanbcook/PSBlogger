@@ -3,17 +3,11 @@ name: Pester Tests
 on:
   pull_request:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - '.github/workflows/pester-tests.yml'
   push:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - '.github/workflows/pester-tests.yml'
 
 jobs:
-  test:
+  pester-tests:
     runs-on: windows-latest
     
     steps:
