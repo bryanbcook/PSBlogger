@@ -7,12 +7,20 @@ Describe "Set-BloggerConfig" {
         BlogId = $null
         UserPreferences = "TestDrive:\UserPreferences.json"
       }
-    }    
+    }
   }
 
   It "Should persist new value to <UserPreference> to BloggerSession.UserPreferences" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
   ) {
+    # arrange
+    InModuleScope "PSBlogger" {
+      $BloggerSession = [pscustomobject]@{
+        BlogId = $null
+        UserPreferences = "TestDrive:\UserPreferences.json"
+      }
+    }
+
     # act
     Set-BloggerConfig -Name $UserPreference -Value $UserPreferenceValue -ErrorAction Stop
 
