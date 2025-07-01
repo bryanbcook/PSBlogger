@@ -2,11 +2,12 @@ name: Pester Tests
 
 on:
   pull_request:
+    branches: [ main ]
   push:
     branches: [ main ]
 
 jobs:
-  test:
+  pester-tests:
     runs-on: windows-latest
     
     steps:
