@@ -2,17 +2,29 @@
 Describe "Set-BloggerConfig" {
   BeforeEach {
     Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+    
+    # Ensure the test has a clean BloggerSession variable
     InModuleScope "PSBlogger" {
+      # Remove the existing variable if it exists
+      if (Get-Variable -Name BloggerSession -Scope Script -ErrorAction SilentlyContinue) {
+        Remove-Variable -Name BloggerSession -Scope Script -Force
+      }
+      
+      # Create a new test-specific BloggerSession
       $BloggerSession = [pscustomobject]@{
         BlogId = $null
         UserPreferences = "TestDrive:\UserPreferences.json"
       }
-    }    
+      
+      # Set it as a script-scoped variable (same as the module does)
+      New-Variable -Name BloggerSession -Value $BloggerSession -Scope Script -Force
+    }
   }
 
   It "Should persist new value to <UserPreference> to BloggerSession.UserPreferences" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
   ) {
+
     # act
     Set-BloggerConfig -Name $UserPreference -Value $UserPreferenceValue -ErrorAction Stop
 

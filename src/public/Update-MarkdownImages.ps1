@@ -3,8 +3,8 @@
 Updates markdown content by replacing local image references with Google Drive URLs.
 
 .DESCRIPTION
-Takes a markdown file and replaces local image references with Google Drive public URLs,
-while preserving alt text and titles.
+Takes a markdown file and replaces local image references with Google Drive public URLs, 
+converting all images to standard markdown format while preserving alt text and titles.
 
 .PARAMETER File
 The path to the markdown file to update.
@@ -15,9 +15,10 @@ Each object should have OriginalMarkdown and NewUrl properties.
 
 .EXAMPLE
 $mappings = @(
-    @{ OriginalMarkdown = "![alt](local.jpg)"; NewUrl = "https://drive.google.com/uc?export=view&id=123" }
+    @{ OriginalMarkdown = "![alt](local.jpg)"; NewUrl = "https://drive.google.com/uc?export=view&id=123"; AltText = "alt"; Title = "" }
+    @{ OriginalMarkdown = "![[image.png|description]]"; NewUrl = "https://drive.google.com/uc?export=view&id=456"; AltText = "description"; Title = "" }
 )
-Update-MarkdownImageUrls -File "post.md" -ImageMappings $mappings
+Update-MarkdownImages -File "post.md" -ImageMappings $mappings
 #>
 function Update-MarkdownImages {
     [CmdletBinding()]
