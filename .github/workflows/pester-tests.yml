@@ -30,32 +30,41 @@ jobs:
     - name: Run Pester Tests
       shell: pwsh
       run: |
-        # Import the module
-        Import-Module ./src/PSBlogger.psd1 -Force
+        # Debug: Show current directory and files
+        Write-Host "Current directory: $(Get-Location)"
+        Write-Host "Directory structure:"
+        Get-ChildItem -Path . -Recurse | Select-Object FullName, PSIsContainer
+        
+        # Change to src directory to match test expectations
+        Set-Location "./src"
+        Write-Host "Changed to src directory: $(Get-Location)"
         
         # Configure Pester
         $PesterConfig = @{
           Run = @{
-            Path = './src/tests'
+            Path = './tests'
           }
           Output = @{
             Verbosity = 'Detailed'
           }
           TestResult = @{
             Enabled = $true
-            OutputPath = 'TestResults.xml'
+            OutputPath = '../TestResults.xml'
             OutputFormat = 'NUnitXml'
           }
           CodeCoverage = @{
             Enabled = $true
-            Path = './src/*.ps*1'
-            OutputPath = 'coverage.xml'
+            Path = './*.ps*1'
+            OutputPath = '../coverage.xml'
             OutputFormat = 'JaCoCo'
           }
         }
         
         # Run tests
         $Results = Invoke-Pester -Configuration $PesterConfig
+        
+        # Change back to root directory
+        Set-Location ".."
         
         # Exit with error code if tests failed
         if ($Results.FailedCount -gt 0) {
