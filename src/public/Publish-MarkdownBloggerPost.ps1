@@ -1,5 +1,32 @@
 <#
+.SYNOPSIS
+    Publishes a markdown file as a blog post to Blogger, including uploading any local images to Google Drive.
 
+.DESCRIPTION
+    This function processes a markdown file to publish it as a blog post. It handles:
+    - Extracting front matter from the markdown file
+    - Finding and uploading local images to Google Drive
+    - Converting markdown content to HTML
+    - Publishing the post to Blogger
+    - Updating the front matter with post information
+
+.PARAMETER File
+    The path to the markdown file to publish.
+
+.PARAMETER BlogId
+    The ID of the blog to publish to. If not specified, uses the BlogId from the current BloggerSession.
+
+.PARAMETER Draft
+    If specified, publishes the post as a draft rather than a published post.
+
+.PARAMETER Force
+    If specified, will overwrite existing images in Google Drive with the same name.
+
+.EXAMPLE
+    Publish-MarkdownBloggerPost -File "my-post.md"
+
+.EXAMPLE
+    Publish-MarkdownBloggerPost -File "my-post.md" -Draft -Force
 #>
 Function Publish-MarkdownBloggerPost
 {
@@ -13,7 +40,10 @@ Function Publish-MarkdownBloggerPost
     [int]$BlogId,
 
     [Parameter(Mandatory=$false)]
-    [switch]$Draft
+    [switch]$Draft,
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Force
   )
 
   if (!$PSBoundParameters.ContainsKey("BlogId"))
@@ -28,41 +58,7 @@ Function Publish-MarkdownBloggerPost
   $postInfo = Get-MarkdownFrontMatter -File $File
 
   # Process images: detect, upload to Google Drive, and update markdown
-  $imageMappings = @()
-  $images = Find-MarkdownImages -File $File
-  if ($images -and $images.Count -gt 0) {
-    Write-Verbose "Found $($images.Count) local images to upload to Google Drive"
-
-    $anonymous = New-GoogleDriveFilePermission -role "reader" -type "anyone"
-    
-    foreach ($image in $images) {
-      try {
-        Write-Verbose "Uploading image: $($image.FileName)"
-        $uploadResult = Add-GoogleDriveFile -FilePath $image.LocalPath -FileName $image.FileName
-        if (!$uploadResult) {
-          Write-Warning "Failed to upload image $($image.FileName)"
-          continue
-        }
-        Set-GoogleDriveFilePermission -FileId $uploadResult.id -Permission $anonymous | Out-Null
-        
-        $image.NewUrl = $uploadResult.PublicUrl
-        $imageMappings += $image
-        
-        Write-Verbose "Successfully uploaded: $($image.FileName) -> $($uploadResult.PublicUrl)"
-      }
-      catch {
-        Write-Warning "Failed to upload image $($image.FileName): $($_.Exception.Message)$([Environment]::NewLine)$($_.ErrorDetails | ConvertTo-Json -Depth 10)"
-      }
-    }
-    
-    # Update the markdown file with new URLs
-    if ($imageMappings -and $imageMappings.Count -gt 0) {
-      $updated = Update-MarkdownImages -File $File -ImageMappings $imageMappings
-      if ($updated) {
-        Write-Verbose "Updated markdown file with $($imageMappings.Count) new image URLs"
-      }
-    }
-  }
+  $imageMappings = Publish-MarkdownDriveImages -File $File -Force:$Force
   
   # convert from markdown to html file
   $content = ConvertTo-HtmlFromMarkdown -File $File
