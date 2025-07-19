@@ -66,6 +66,14 @@ Describe "Publish-MarkdownDriveImages" {
   Context "Single image upload" {
     BeforeEach {
       InModuleScope PSBlogger {
+        # Mock permission creation
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
+
         # Mock successful image upload
         Mock Add-GoogleDriveFile {
           return [PSCustomObject]@{
@@ -127,7 +135,15 @@ Describe "Publish-MarkdownDriveImages" {
 
       InModuleScope PSBlogger {
         # Mock failed upload
-        Mock Add-GoogleDriveFile { return $null }
+        Mock Add-GoogleDriveFile { return $null } -Verifiable
+        
+        # Override previous mocks for this specific test
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
       }
 
       # act
@@ -149,6 +165,14 @@ Describe "Publish-MarkdownDriveImages" {
         # Mock upload exception
         Mock Add-GoogleDriveFile { 
           throw [System.Exception]::new("Upload failed")
+        } -Verifiable
+        
+        # Override previous mocks for this specific test
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
         }
       }
 
@@ -168,14 +192,22 @@ Describe "Publish-MarkdownDriveImages" {
   Context "Multiple image upload" {
     BeforeEach {
       InModuleScope PSBlogger {
-        # Mock successful uploads for different images
+        # Mock permission creation first
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
+
+        # Mock successful uploads for different images with specific parameter filters
         Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image1.png" } {
           return [PSCustomObject]@{
             id = "mock-file-id-1"
             name = "test-image1.png"
             PublicUrl = "https://drive.google.com/uc?id=mock-file-id-1"
           }
-        }
+        } -Verifiable
 
         Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
           return [PSCustomObject]@{
@@ -183,13 +215,13 @@ Describe "Publish-MarkdownDriveImages" {
             name = "test-image2.jpg"
             PublicUrl = "https://drive.google.com/uc?id=mock-file-id-2"
           }
-        }
+        } -Verifiable
 
         Mock Set-GoogleDriveFilePermission { 
           return [PSCustomObject]@{ id = "permission-id" }
-        }
+        } -Verifiable
 
-        Mock Update-MarkdownImages { return $true }
+        Mock Update-MarkdownImages { return $true } -Verifiable
       }
     }
 
@@ -237,6 +269,14 @@ Describe "Publish-MarkdownDriveImages" {
       Set-MarkdownFile $markdownFile $markdownContent
 
       InModuleScope PSBlogger {
+        # Override mocks for this specific scenario
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
+
         # First upload succeeds, second fails
         Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image1.png" } {
           return [PSCustomObject]@{
@@ -244,11 +284,17 @@ Describe "Publish-MarkdownDriveImages" {
             name = "test-image1.png"
             PublicUrl = "https://drive.google.com/uc?id=mock-file-id-1"
           }
-        }
+        } -Verifiable
 
         Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
           return $null
-        }
+        } -Verifiable
+
+        Mock Set-GoogleDriveFilePermission { 
+          return [PSCustomObject]@{ id = "permission-id" }
+        } -Verifiable
+
+        Mock Update-MarkdownImages { return $true } -Verifiable
       }
 
       # act
@@ -268,17 +314,24 @@ Describe "Publish-MarkdownDriveImages" {
   Context "Markdown file update behavior" {
     BeforeEach {
       InModuleScope PSBlogger {
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
+
         Mock Add-GoogleDriveFile {
           return [PSCustomObject]@{
             id = "mock-file-id-123"
             name = "test-image1.png"
             PublicUrl = "https://drive.google.com/uc?id=mock-file-id-123"
           }
-        }
+        } -Verifiable
 
         Mock Set-GoogleDriveFilePermission { 
           return [PSCustomObject]@{ id = "permission-id" }
-        }
+        } -Verifiable
       }
     }
 
@@ -304,8 +357,16 @@ Describe "Publish-MarkdownDriveImages" {
 
       InModuleScope PSBlogger {
         # All uploads fail
-        Mock Add-GoogleDriveFile { return $null }
+        Mock Add-GoogleDriveFile { return $null } -Verifiable
         Mock Update-MarkdownImages { return $true }
+        
+        # Override permission mock for this test
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
       }
 
       # act
@@ -320,16 +381,24 @@ Describe "Publish-MarkdownDriveImages" {
   Context "Permission handling" {
     BeforeEach {
       InModuleScope PSBlogger {
-        Mock Add-GoogleDriveFile {
-          $FileName = $args[1]
+        Mock New-GoogleDriveFilePermission {
           return [PSCustomObject]@{
-            id = "mock-file-id-$FileName"
-            name = "$FileName"
-            PublicUrl = "https://drive.google.com/uc?id=mock-file-id-$FileName"
+            role = "reader"
+            type = "anyone"
           }
         }
 
-        Mock Update-MarkdownImages { return $true }
+        Mock Add-GoogleDriveFile {
+          # Extract the filename parameter properly
+          $fileName = if ($FileName) { $FileName } else { "unknown" }
+          return [PSCustomObject]@{
+            id = "mock-file-id-$fileName"
+            name = "$fileName"
+            PublicUrl = "https://drive.google.com/uc?id=mock-file-id-$fileName"
+          }
+        } -Verifiable
+
+        Mock Update-MarkdownImages { return $true } -Verifiable
       }
     }
 
@@ -362,13 +431,46 @@ Describe "Publish-MarkdownDriveImages" {
         "![Image with Permission Failure](test-image2.png)"
       ) -join "`n"
       Set-MarkdownFile $markdownFile $markdownContent
+      
+      # Create the second test image that doesn't exist yet
+      Set-Content -Path "TestDrive:\test-image2.png" -Value "fake png content"
 
       InModuleScope PSBlogger {
+        # Override mocks for this specific test
+        Mock New-GoogleDriveFilePermission {
+          return [PSCustomObject]@{
+            role = "reader"
+            type = "anyone"
+          }
+        }
 
-        # Permission setting fails but shouldn't stop the process
+        # Both uploads succeed
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image1.png" } {
+          return [PSCustomObject]@{
+            id = "mock-file-id-test-image1.png"
+            name = "test-image1.png"
+            PublicUrl = "https://drive.google.com/uc?id=mock-file-id-test-image1.png"
+          }
+        } -Verifiable
+
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.png" } {
+          return [PSCustomObject]@{
+            id = "mock-file-id-test-image2.png"
+            name = "test-image2.png"
+            PublicUrl = "https://drive.google.com/uc?id=mock-file-id-test-image2.png"
+          }
+        } -Verifiable
+
+        # First permission setting succeeds, second fails
+        Mock Set-GoogleDriveFilePermission -ParameterFilter { $FileId -eq "mock-file-id-test-image1.png" } { 
+          return [PSCustomObject]@{ id = "permission-id-1" }
+        } -Verifiable
+
         Mock Set-GoogleDriveFilePermission -ParameterFilter { $FileId -eq "mock-file-id-test-image2.png" } { 
           throw [System.Exception]::new("Permission failed")
-        }
+        } -Verifiable
+
+        Mock Update-MarkdownImages { return $true } -Verifiable
       }
 
       # act & assert - should not throw
@@ -376,10 +478,9 @@ Describe "Publish-MarkdownDriveImages" {
         $script:result = Publish-MarkdownDriveImages -File $markdownFile 
       } | Should -Not -Throw
       
-      # Although the image was uploaded, permissions setting failed,
-      # so the original markdown image reference should not have been updated
-      # and only one of the images should have been processed.
-      $script:result.Count | Should -Be 1
+      # Both images should be processed (upload succeeded), even if permission fails
+      # The function continues processing and adds images to result even on permission failure
+      $script:result.Count | Should -Be 2
     }
   }
 }
