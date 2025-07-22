@@ -131,7 +131,7 @@ Initialize-Blogger -ClientId <id> -ClientSecret <secret>
 ### Fetch the available blogs and set the first blog as the default
 $blogs = Get-BloggerBlogs
 $blogId = $blogs[0].id
-Set-BloggerConfig -BlogId $blogId
+Set-BloggerConfig -Name BlogId $blogId
 
 ### Fetch posts
 $posts = Get-BloggerPosts -All
