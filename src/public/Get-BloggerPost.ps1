@@ -1,12 +1,15 @@
 <#
 .DESCRIPTION
-  Retrieves an individual post from a specified Blogger blog and saves the HTML content to a file.
+  Retrieves an individual post from a specified Blogger blog and optionally saves the HTML content to a file.
 
 .PARAMETER BlogId
   The ID of the blog to retrieve the post from. If not specified, uses the BlogId in the user preferences.
 
 .PARAMETER PostId
   The ID of the post to retrieve. This parameter is required.
+
+.PARAMETER Format
+  The format of the post content to retrieve. Currently, only "HTML" is supported.
 
 .PARAMETER OutDirectory
   The directory where the HTML file will be saved. If not specified, uses the current directory.
@@ -15,16 +18,25 @@
   Get-BloggerPost -PostId "1234567890123456789"
 
 .EXAMPLE
-  Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -OutDirectory "C:\temp"
+  Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format HTML -OutDirectory "C:\temp"
 #>
 Function Get-BloggerPost {
   [CmdletBinding()]
   param(
+    [Parameter(ParameterSetName = "Default")]
+    [Parameter(ParameterSetName = "Persist")]
     [string]$BlogId,
 
+    [Parameter(ParameterSetName = "Default")]
+    [Parameter(ParameterSetName = "Persist")]
     [Parameter(Mandatory)]
     [string]$PostId,
 
+    [Parameter(Mandatory, ParameterSetName = "Persist")]
+    [ValidateSet("HTML")]
+    [string]$Format,
+
+    [Parameter(ParameterSetName = "Persist")]
     [string]$OutDirectory = (Get-Location).Path
   )
 

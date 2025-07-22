@@ -45,7 +45,7 @@ Describe "Get-BloggerPost" {
       }            
             
       # act
-      $result = Get-BloggerPost -PostId "123" -OutDirectory $OutDirectory
+      $result = Get-BloggerPost -PostId "123" -Format HTML -OutDirectory $OutDirectory
 
       # assert
       $result | Should -Not -BeNullOrEmpty
@@ -71,9 +71,10 @@ Describe "Get-BloggerPost" {
       }      
       
       # act
-      Get-BloggerPost -PostId "123"
+      $result = Get-BloggerPost -PostId "123"
            
       # assert
+      $result | Should -Not -BeNullOrEmpty
       Should -InvokeVerifiable
     }
         
@@ -120,7 +121,7 @@ Describe "Get-BloggerPost" {
       $OutDirectory = "TestDrive:\nonexistent"
       
       # act
-      Get-BloggerPost -PostId "123" -OutDirectory $OutDirectory
+      Get-BloggerPost -PostId "123" -OutDirectory $OutDirectory -Format HTML
             
       # assert
       Test-Path -Path $OutDirectory | Should -BeTrue
@@ -129,7 +130,7 @@ Describe "Get-BloggerPost" {
     It "Should save content to correct filename" {
       
       # arrange      
-      Get-BloggerPost -PostId "123" -OutDirectory (Resolve-Path "TestDrive:")
+      Get-BloggerPost -PostId "123" -OutDirectory (Resolve-Path "TestDrive:") -Format HTML
             
       # assert
       Test-Path -Path "TestDrive:\123.html" | Should -BeTrue
