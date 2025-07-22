@@ -20,6 +20,11 @@ jobs:
         Set-PSRepository PSGallery -InstallationPolicy Trusted
         Install-Module -Name Pester -Force -SkipPublisherCheck
         Install-Module -Name PowerShell-Yaml -Force -SkipPublisherCheck
+
+    - name: Install pandoc
+      shell: pwsh
+      run: |
+        choco install pandoc -y
         
     - name: Run Pester Tests
       shell: pwsh

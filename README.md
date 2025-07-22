@@ -52,6 +52,35 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
    Get-BloggerPosts
    ```
 
+1. Fetch an individual post from your blog
+
+   ```
+   Get-BloggerPost -PostId <postid>
+   ```
+   
+   You can also persist the post to disk as HTML or markdown in the current directory. 
+   
+   When using `HTML` format, files are saved as `<postid>.html`
+
+   When using `Markdown` format, files are saved as `<title>.md`
+
+   ```
+   Get-BloggerPost -PostId <postid> -Format HTML
+   Get-BloggerPost -PostId <postid> -Format Markdown
+   ```
+   
+   You can specify an output directory where the file will be saved.
+
+   ```
+   Get-BloggerPost -PostId <postid> -OutDirectory "C:\MyPosts" -Format HTML
+   ```
+
+   You can also include a `FolderDateFormat` that uses the `published` property of the blog post to construct a subfolder.
+
+   ```
+   Get-BloggerPost -PostId <postId> -OutDirectory ".\Blog" -FolderDateFormat "YYYY\\MM" -Format Markdown
+   ```
+
 1. Publish a markdown file to your blog as draft
 
    ```

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Convert a file to Markdown using Pandoc
+    Convert a Markdown file to HTML using Pandoc
 
 .PARAMETER File
     The file path of the markdown file
