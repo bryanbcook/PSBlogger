@@ -52,6 +52,18 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
    Get-BloggerPosts
    ```
 
+1. Download an individual post from your blog
+
+   ```
+   Get-BloggerPost -PostId <postid>
+   ```
+   
+   This will download the HTML content of the specified post and save it to a file named `<postid>.html` in the current directory. You can also specify a different output directory:
+   
+   ```
+   Get-BloggerPost -PostId <postid> -OutDirectory "C:\MyPosts"
+   ```
+
 1. Publish a markdown file to your blog as draft
 
    ```
