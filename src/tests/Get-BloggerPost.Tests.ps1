@@ -17,7 +17,7 @@ Describe "Get-BloggerPost" {
   Context "Parameter validation" {
     It "Should require PostId parameter" {
       # act / assert
-      { Get-BloggerPost } | Should -Throw "*PostId*"
+      { Get-BloggerPost -Format Markdown } | Should -Throw "*PostId*"
     }
         
     It "Should throw error when BlogId is not provided and not in session" {
@@ -182,6 +182,7 @@ Describe "Get-BloggerPost" {
           return @{ 
             id = $postId
             title = "Test Post"
+            published = "2023-10-01T12:00:00Z"
             content = "<h1>Hello World</h1><p>This is a post.</p>" 
           }
         }
@@ -207,6 +208,78 @@ Describe "Get-BloggerPost" {
       # assert
       $frontMatter = Get-MarkdownFrontMatter -File $outFile
       $frontMatter.postId | Should -Be "123"
+    }
+  }
+
+  Context "Using FolderDateFormat" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        # Mock the session to return a test blog ID
+        $BloggerSession.BlogId = "test-blog-id"
+
+        $postId = "123"
+
+        # mock post retrieval
+        Mock Invoke-GApi {
+          return @{ 
+            id = $postId
+            title = "Test Post"
+            published = "2023-10-01T12:00:00Z"
+            content = "<h1>Hello World</h1><p>This is a post.</p>" 
+          }
+        }
+      }
+    }
+    
+    It "Should write file to specified formatted directory - <dateformat> - <format>" -TestCases @(
+      @{ DateFormat = "yyyy\\MM"; ExpectedPath = "TestDrive:\2023\10\Test Post.md"; Format = "Markdown" }
+      @{ DateFormat = "yyyy\\MM\\dd"; ExpectedPath = "TestDrive:\2023\10\01\123.html"; Format = "HTML" }
+    ) {
+      # arrange
+      $invokeArgs = @{
+        PostId = 123
+        Format = $Format
+        OutDirectory = "TestDrive:\"
+        FolderDateFormat = $DateFormat
+      }
+
+      # act
+      Get-BloggerPost @invokeArgs
+
+      # assert
+      Test-Path $ExpectedPath | Should -BeTrue
+
+    }
+
+    It "Should ignore folderdateformat when not specified" {
+
+      # act
+      Get-BloggerPost -PostId 123 -Format HTML -OutDirectory "TestDrive:\"
+
+      # assert
+      Test-Path "TestDrive:\123.html" | Should -BeTrue
+
+    }
+
+    It "Should ignore folderdateformat when post has not been published" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Invoke-GApi {
+          return @{ 
+            id = 123
+            title = "Test Post"
+            published = $null
+            content = "<h1>Hello World</h1><p>This is a post.</p>" 
+          }
+        }
+      }
+
+      # act
+      Get-BloggerPost -PostId 123 -Format HTML -OutDirectory "TestDrive:\" -FolderDateFormat "YYYY\\MM"
+
+      # assert
+      Test-Path "TestDrive:\123.html" | Should -BeTrue
     }
   }
 }

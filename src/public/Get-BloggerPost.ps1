@@ -11,6 +11,10 @@
 .PARAMETER Format
   The format of the post content to retrieve. Use either Markdown or HTML.
 
+.PARAMETER FolderDateFormat
+  The folder name as expressed in a DateTime format string. For example, "YYYY/MM" which will save files
+  in a folder structure like "2023/10" based on the date of the post.
+
 .PARAMETER OutDirectory
   The directory where the HTML file will be saved. If not specified, uses the current directory.
 
@@ -19,6 +23,9 @@
 
 .EXAMPLE
   Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format HTML -OutDirectory "C:\temp"
+
+.EXAMPLE
+  Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format Markdown -DateFormat "YYYY\\MM" -OutDirectory "C:\blogposts"
 #>
 Function Get-BloggerPost {
   [CmdletBinding()]
@@ -27,14 +34,16 @@ Function Get-BloggerPost {
     [Parameter(ParameterSetName = "Persist")]
     [string]$BlogId,
 
-    [Parameter(ParameterSetName = "Default")]
-    [Parameter(ParameterSetName = "Persist")]
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory,ParameterSetName = "Default")]
+    [Parameter(Mandatory,ParameterSetName = "Persist")]
     [string]$PostId,
 
     [Parameter(Mandatory, ParameterSetName = "Persist")]
     [ValidateSet("HTML", "Markdown")]
     [string]$Format,
+
+    [Parameter(ParameterSetName ="Persist")]
+    [string]$FolderDateFormat,
 
     [Parameter(ParameterSetName = "Persist")]
     [string]$OutDirectory = (Get-Location).Path
@@ -51,16 +60,6 @@ Function Get-BloggerPost {
     throw "PostId is required."
   }
 
-  # Ensure the output directory exists
-  if (!(Test-Path -Path $OutDirectory)) {
-    try {
-      New-Item -ItemType Directory -Path $OutDirectory -Force | Out-Null
-    }
-    catch {
-      throw "Failed to create output directory '$OutDirectory': $($_.Exception.Message)"
-    }
-  }
-
   try {
     $uri = "https://www.googleapis.com/blogger/v3/blogs/$BlogId/posts/$PostId"
         
@@ -68,6 +67,23 @@ Function Get-BloggerPost {
         
     if ($null -eq $result) {
       throw "No post found with PostId '$PostId' in blog '$BlogId'."
+    }
+
+    # Construct a subfolder based on the published date
+    if ($FolderDateFormat -and $result.published) {
+      $date = [datetime]::Parse($result.published)
+      $formattedDate = $date.ToString($FolderDateFormat)
+      $OutDirectory = Join-Path -Path $OutDirectory -ChildPath $formattedDate
+    }
+
+    # Ensure the output directory exists
+    if (!(Test-Path -Path $OutDirectory)) {
+      try {
+        New-Item -ItemType Directory -Path $OutDirectory -Force | Out-Null
+      }
+      catch {
+        throw "Failed to create output directory '$OutDirectory': $($_.Exception.Message)"
+      }
     }
 
     # Extract the HTML content
