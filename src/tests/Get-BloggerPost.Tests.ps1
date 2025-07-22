@@ -101,9 +101,29 @@ Describe "Get-BloggerPost" {
         Get-BloggerPost -PostId "123" 
       } | Should -Throw "*Access denied*"
     }
+
+        It "Should handle empty content gracefully" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Invoke-GApi { 
+          return @{ content = "" }
+        }
+
+        Mock Write-Warning { }
+      }
+      
+      
+      # act
+      Get-BloggerPost -PostId "123"
+      
+      # assert: verify warning is issued
+      Should -Invoke -ModuleName PSBlogger Write-Warning -Exactly 1 -ParameterFilter {
+        $Message -like "*has no content*"
+      }
+    }
   }
     
-  Context "File operations" {
+  Context "As HTML" {
     BeforeEach {
       InModuleScope PSBlogger {
         # Mock the session to return a test blog ID
@@ -137,31 +157,56 @@ Describe "Get-BloggerPost" {
     }
         
     It "Should use current directory when OutDirectory not specified" {
+      # arrange
+      $ExpectedPath = Join-Path (Get-Location).Path -ChildPath "123.html"
+
       # act
-      Get-BloggerPost -PostId "123"  
+      Get-BloggerPost -PostId "123" -Format HTML
 
       # assert
       Test-Path -Path $ExpectedPath | Should -BeTrue
     }
-        
-    It "Should handle empty content gracefully" {
-      # arrange
-      InModuleScope PSBlogger {
-        Mock Invoke-GApi { 
-          return @{ content = "" }
-        }
+  }
 
-        Mock Write-Warning { }
+  Context "As Markdown" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        # Mock the session to return a test blog ID
+        $BloggerSession.BlogId = "test-blog-id"
+
+        $postId = "123"
+
+        # mock post retrieval
+        Mock Invoke-GApi {
+          return @{ 
+            id = $postId
+            title = "Test Post"
+            content = "<h1>Hello World</h1><p>This is a post.</p>" 
+          }
+        }
       }
+
+      $postId = "123"
+      $title = "Test Post"
+      $outFile = "TestDrive:\$title.md"
       
+    }
+
+    AfterEach {
+      if (Test-Path $outFile) {
+        Remove-Item $outFile -Force
+      }
+    }
+
+    It "Should write post details to frontmatter" {
       
       # act
-      Get-BloggerPost -PostId "123"
-      
-      # assert: verify warning is issued
-      Should -Invoke -ModuleName PSBlogger Write-Warning -Exactly 1 -ParameterFilter {
-        $Message -like "*has no content*"
-      }
+      Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
+
+      # assert
+      $frontMatter = Get-MarkdownFrontMatter -File $outFile
+      $frontMatter.postId | Should -Be "123"
     }
   }
 }

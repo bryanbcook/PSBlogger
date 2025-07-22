@@ -1,6 +1,6 @@
 <#
 .DESCRIPTION
-  Retrieves an individual post from a specified Blogger blog and optionally saves the HTML content to a file.
+  Retrieves an individual post from a specified Blogger blog and optionally saves the content to a file as HTML or Markdown.
 
 .PARAMETER BlogId
   The ID of the blog to retrieve the post from. If not specified, uses the BlogId in the user preferences.
@@ -9,7 +9,7 @@
   The ID of the post to retrieve. This parameter is required.
 
 .PARAMETER Format
-  The format of the post content to retrieve. Currently, only "HTML" is supported.
+  The format of the post content to retrieve. Use either Markdown or HTML.
 
 .PARAMETER OutDirectory
   The directory where the HTML file will be saved. If not specified, uses the current directory.
@@ -33,7 +33,7 @@ Function Get-BloggerPost {
     [string]$PostId,
 
     [Parameter(Mandatory, ParameterSetName = "Persist")]
-    [ValidateSet("HTML")]
+    [ValidateSet("HTML", "Markdown")]
     [string]$Format,
 
     [Parameter(ParameterSetName = "Persist")]
@@ -79,14 +79,34 @@ Function Get-BloggerPost {
     }
 
     # Create the output file path
-    $fileName = "$PostId.html"
-    $filePath = Join-Path -Path $OutDirectory -ChildPath $fileName
-
-    # Save the HTML content to the file
     try {
-      $htmlContent | Out-File -FilePath $filePath -Encoding UTF8
-      Write-Verbose "Post content saved to: $filePath"
-            
+      
+      switch ($Format) {
+
+        # Save the HTML content to a file
+        "HTML" {
+
+          $fileName = "$PostId.html"
+          $filePath = Join-Path -Path $OutDirectory -ChildPath $fileName
+          $htmlContent | Out-File -FilePath $filePath -Encoding UTF8
+          Write-Verbose "Post content saved to: $filePath"
+        }
+
+        # Save the Post to a Markdown file
+        "Markdown" {
+
+          $title = $result.title
+          $frontMatter = [ordered]@{
+            postId = $result.id
+          }
+          $file = "$title.md"
+          $filePath = Join-Path -Path $OutDirectory -ChildPath $file
+          ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null
+          Set-MarkdownFrontMatter -File $filePath -Replace $frontMatter
+          Write-Verbose "Post content saved to: $filePath"
+        }
+      }  
+
       # Return the post object for further processing if needed
       return $result
     }
