@@ -35,7 +35,7 @@ function ConvertTo-MarkdownFromHtml {
   }
 
   # ensure that the file is an absolute path because pandoc.exe doesn't like powershell relative paths
-  $File = (Resolve-Path $File).Path
+  $File = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($File)
 
   # Use pandoc to convert the markdown to Html 
   $pandocArgs = "`"{0}`" " -f $File
@@ -52,6 +52,8 @@ function ConvertTo-MarkdownFromHtml {
     $OutFile = Join-Path (Split-Path $File -Parent) ((Split-Path $File -LeafBase) + ".md")
     Write-Verbose "Using OutFile: $OutFile"
   }
+  # ensure that the file is an absolute path because pandoc.exe doesn't like powershell relative paths
+  $OutFile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutFile)
 
   $pandocArgs += "-o `"{0}`" " -f $OutFile
 

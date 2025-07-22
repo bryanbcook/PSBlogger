@@ -12,13 +12,18 @@ Describe "ConvertTo-MarkdownFromHtml" {
 
     BeforeEach {
       $outFile = "TestDrive:\123.md"
-      $outFilePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($outFile)
       $htmlContent = "<h1>Hello World</h1>"
+    }
+
+    AfterEach {
+      if (Test-Path $outFile) {
+        Remove-Item $outFile -Force
+      }
     }
 
     It "Should save HTML content to a markdown file" {
       # act
-      ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFilePath
+      ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFile
 
       # assert
       Test-Path $outFile | Should -BeTrue
@@ -26,7 +31,7 @@ Describe "ConvertTo-MarkdownFromHtml" {
 
     It "Should convert HTML content to Markdown file" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFilePath
+      $content = ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFile
 
       # assert
       $content = (Get-Content -Path $outFile -Raw).Split("`r")
@@ -48,15 +53,13 @@ Describe "ConvertTo-MarkdownFromHtml" {
     BeforeEach {
       $htmlContent = "<h1>Hello World</h1>"
       $htmlFile = "TestDrive:\123.html"
-      $htmlFilePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($htmlFile)
       $markdownFile = "TestDrive:\123.md"
-      $markdownFilePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($markdownFile)
       Set-Content -Path $htmlFile -Value $htmlContent
     }
 
     It "Should convert HTML file to Markdown" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -File $htmlFilePath -OutFile $markdownFilePath
+      $content = ConvertTo-MarkdownFromHtml -File $htmlFile -OutFile $markdownFile
 
       # assert
       Test-Path $markdownFile | Should -BeTrue
@@ -66,7 +69,7 @@ Describe "ConvertTo-MarkdownFromHtml" {
 
     It "Should delete temporary file" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -File $htmlFilePath
+      $content = ConvertTo-MarkdownFromHtml -File $htmlFile
 
       # assert
       $content | Should -Not -BeNullOrEmpty
