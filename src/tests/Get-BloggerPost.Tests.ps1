@@ -212,7 +212,7 @@ Describe "Get-BloggerPost" {
   }
 
   Context "As Json" {
-BeforeEach {
+    BeforeEach {
       InModuleScope PSBlogger {
         # Mock the session to return a test blog ID
         $BloggerSession.BlogId = "test-blog-id"
