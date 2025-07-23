@@ -43,7 +43,11 @@ Function Publish-MarkdownBloggerPost
     [switch]$Draft,
 
     [Parameter(Mandatory=$false)]
+    [array]$ExcludeLabels = @(),
+
+    [Parameter(Mandatory=$false)]
     [switch]$Force
+
   )
 
   if (!$PSBoundParameters.ContainsKey("BlogId"))
@@ -79,7 +83,7 @@ Function Publish-MarkdownBloggerPost
   }
 
   if ($postInfo["tags"]) {
-    $postArgs.Labels = [array]$postInfo.tags
+    $postArgs.Labels = [array]$postInfo.tags | Where-Object { $_ -notin $ExcludeLabels }
   }
   
   $post = Publish-BloggerPost @postArgs
