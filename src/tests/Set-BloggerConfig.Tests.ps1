@@ -13,6 +13,7 @@ Describe "Set-BloggerConfig" {
       # Create a new test-specific BloggerSession
       $BloggerSession = [pscustomobject]@{
         BlogId = $null
+        ExcludeLabels = @()
         UserPreferences = "TestDrive:\UserPreferences.json"
       }
       
@@ -23,6 +24,7 @@ Describe "Set-BloggerConfig" {
 
   It "Should persist new value to <UserPreference> to BloggerSession.UserPreferences" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
+    @{ UserPreference="ExcludeLabels"; UserPreferenceValue=@("personal/blog-post") }
   ) {
 
     # act
@@ -37,6 +39,7 @@ Describe "Set-BloggerConfig" {
 
   It "Should persist new value to <UserPreference> to empty BloggerSession.UserPreferences file" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
+    @{ UserPreference="ExcludeLabels"; UserPreferenceValue=@("personal/blog-post") }
   ) {
     # arrange: empty file
     Set-Content TestDrive:\UserPreferences.json -Value "{}"

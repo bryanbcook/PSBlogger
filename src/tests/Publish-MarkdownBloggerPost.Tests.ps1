@@ -165,6 +165,26 @@ postId: "123456"
     # assert
     Should -InvokeVerifiable 
   }
+
+  It "Should use excludelabels user preference when not specified" {
+    # arrange
+    InModuleScope PSBlogger {
+      $BloggerSession.ExcludeLabels = @("personal/blog-post")
+      Mock Publish-BloggerPost -Verifiable -ParameterFilter { 
+        $Labels -ne $null -and (-not (Compare-Object $Labels @("PowerShell","Pester")))} { return @{ id="123"} }
+    }
+
+    # add our tags to the file
+    $postInfo = Get-MarkdownFrontMatter -File $validFile
+    $postInfo.tags = @("PowerShell","Pester", "personal/blog-post")
+    Set-MarkdownFrontMatter -File $validFile -Replace $postInfo
+
+    # act
+    Publish-MarkdownBloggerPost -File $validFile -BlogId "123"
+
+    # assert
+    Should -InvokeVerifiable 
+  }
   
   It "Should update front matter with postid after publishing" {
     # arrange

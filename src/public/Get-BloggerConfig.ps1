@@ -11,5 +11,6 @@ Function Get-BloggerConfig
     PandocHtmlFormat = $BloggerSession.PandocHtmlFormat
     PandocAdditionalArgs = $BloggerSession.PandocAdditionalArgs
     BlogId = $BloggerSession.BlogId
+    ExcludeLabels = $BloggerSession.ExcludeLabels
   }
 }

@@ -58,6 +58,10 @@ Function Publish-MarkdownBloggerPost
     }
   }
 
+  if (!$PSBoundParameters.ContainsKey("ExcludeLabels")) {
+    $ExcludeLabels = $BloggerSession.ExcludeLabels
+  }
+
   # grab the front matter
   $postInfo = Get-MarkdownFrontMatter -File $File
 
