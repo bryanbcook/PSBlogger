@@ -64,9 +64,12 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
 
    When using `Markdown` format, files are saved as `<title>.md`
 
+   When using `JSON` format, files are saved as `<postid>.json`
+
    ```
    Get-BloggerPost -PostId <postid> -Format HTML
    Get-BloggerPost -PostId <postid> -Format Markdown
+   Get-BloggerPost -PostId <postid> -Format JSON
    ```
    
    You can specify an output directory where the file will be saved.
