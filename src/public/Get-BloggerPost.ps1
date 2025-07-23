@@ -9,7 +9,7 @@
   The ID of the post to retrieve. This parameter is required.
 
 .PARAMETER Format
-  The format of the post content to retrieve. Use either Markdown or HTML.
+  The format of the post content to retrieve. Use either Markdown, JSON or HTML.
 
 .PARAMETER FolderDateFormat
   The folder name as expressed in a DateTime format string. For example, "YYYY/MM" which will save files
