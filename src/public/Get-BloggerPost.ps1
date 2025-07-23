@@ -115,6 +115,7 @@ Function Get-BloggerPost {
           $title = $result.title
           $frontMatter = [ordered]@{
             postId = $result.id
+            tags = $result.labels
           }
           $file = "$title.md"
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file

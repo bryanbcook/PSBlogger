@@ -184,6 +184,7 @@ Describe "Get-BloggerPost" {
             title = "Test Post"
             published = [datetime]"2023-10-01T17:30:00-04:00"
             content = "<h1>Hello World</h1><p>This is a post.</p>" 
+            labels = @("Azure DevOps", "Azure Pipelines")
           }
         }
       }
@@ -200,7 +201,7 @@ Describe "Get-BloggerPost" {
       }
     }
 
-    It "Should write post details to frontmatter" {
+    It "Should write postid to frontmatter" {
       
       # act
       Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
@@ -208,6 +209,17 @@ Describe "Get-BloggerPost" {
       # assert
       $frontMatter = Get-MarkdownFrontMatter -File $outFile
       $frontMatter.postId | Should -Be "123"
+    }
+
+    It "Should write labels to frontmatter" {
+      # act
+      Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
+
+      # assert
+      $frontMatter = Get-MarkdownFrontMatter -File $outFile
+      $frontMatter.tags.Count | Should -Be 2
+      $frontMatter.tags[0] | Should -Be "Azure DevOps"
+      $frontMatter.tags[1] | Should -Be "Azure Pipelines"
     }
   }
 
