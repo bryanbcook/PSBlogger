@@ -39,7 +39,7 @@ Function Get-BloggerPost {
     [string]$PostId,
 
     [Parameter(Mandatory, ParameterSetName = "Persist")]
-    [ValidateSet("HTML", "Markdown")]
+    [ValidateSet("HTML", "Markdown", "JSON")]
     [string]$Format,
 
     [Parameter(ParameterSetName ="Persist")]
@@ -120,6 +120,13 @@ Function Get-BloggerPost {
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
           ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null
           Set-MarkdownFrontMatter -File $filePath -Replace $frontMatter
+          Write-Verbose "Post content saved to: $filePath"
+        }
+
+        "JSON" {
+          $fileName = "$PostId.json"
+          $filePath = Join-Path -Path $OutDirectory -ChildPath $fileName
+          $result | ConvertTo-Json | Out-File -FilePath $filePath -Encoding UTF8
           Write-Verbose "Post content saved to: $filePath"
         }
       }  

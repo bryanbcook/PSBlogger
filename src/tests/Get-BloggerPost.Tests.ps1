@@ -182,7 +182,7 @@ Describe "Get-BloggerPost" {
           return @{ 
             id = $postId
             title = "Test Post"
-            published = "10/01/2023 12:00:00"
+            published = [datetime]"10/01/2023 12:00:00"
             content = "<h1>Hello World</h1><p>This is a post.</p>" 
           }
         }
@@ -208,6 +208,51 @@ Describe "Get-BloggerPost" {
       # assert
       $frontMatter = Get-MarkdownFrontMatter -File $outFile
       $frontMatter.postId | Should -Be "123"
+    }
+  }
+
+  Context "As Json" {
+BeforeEach {
+      InModuleScope PSBlogger {
+        # Mock the session to return a test blog ID
+        $BloggerSession.BlogId = "test-blog-id"
+
+        $postId = "123"
+
+        # mock post retrieval
+        Mock Invoke-GApi {
+          return @{ 
+            id = $postId
+            title = "Test Post"
+            published = [datetime]"10/01/2023 12:00:00"
+            content = "<h1>Hello World</h1><p>This is a post.</p>" 
+          }
+        }
+      }
+
+      $postId = "123"
+      $title = "Test Post"
+      $outFile = "TestDrive:\$postId.json"
+      
+    }
+
+    AfterEach {
+      if (Test-Path $outFile) {
+        Remove-Item $outFile -Force
+      }
+    }
+
+    It "Should write json response to file" {
+      
+      # act
+      Get-BloggerPost -PostId $postId -Format JSON -OutDirectory "TestDrive:\"
+
+      # assert
+      $jsonContent = Get-Content -Path $outFile -Raw | ConvertFrom-Json
+      $jsonContent.id | Should -Be "123"
+      $jsonContent.title | Should -Be "Test Post"
+      $jsonContent.content | Should -Not -BeNullOrEmpty
+      $jsonContent.published | Should -Not -BeNullOrEmpty
     }
   }
 
