@@ -71,9 +71,10 @@ Function Get-BloggerPost {
 
     # Construct a subfolder based on the published date
     if ($FolderDateFormat -and $result.published) {
-      $date = [datetime]::Parse($result.published)
-      $formattedDate = $date.ToString($FolderDateFormat)
+      $formattedDate = $result.published.ToString($FolderDateFormat)
+      Write-Verbose "Using published date '$formattedDate' for folder structure."
       $OutDirectory = Join-Path -Path $OutDirectory -ChildPath $formattedDate
+      Write-Verbose "Output directory set to: $OutDirectory"
     }
 
     # Ensure the output directory exists

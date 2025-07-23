@@ -182,7 +182,7 @@ Describe "Get-BloggerPost" {
           return @{ 
             id = $postId
             title = "Test Post"
-            published = "2023-10-01T12:00:00Z"
+            published = "10/01/2023 12:00:00"
             content = "<h1>Hello World</h1><p>This is a post.</p>" 
           }
         }
@@ -225,7 +225,7 @@ Describe "Get-BloggerPost" {
           return @{ 
             id = $postId
             title = "Test Post"
-            published = "2023-10-01T12:00:00Z"
+            published = [datetime]"10/01/2023 12:00:00"
             content = "<h1>Hello World</h1><p>This is a post.</p>" 
           }
         }

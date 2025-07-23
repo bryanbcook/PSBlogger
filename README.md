@@ -120,6 +120,30 @@ When publishing, all images are converted to standard markdown format with Googl
 - Find-MarkdownImages: scans the markdown file to locate images in both standard and Obsidian formats
 - Update-MarkdownImages: updates the content in the markdown file with updated urls, converting all formats to standard markdown
 
-## Future
+## Examples
 
-- Download existing posts to your machine in markdown
+## Download existing posts to your machine in markdown
+
+```powershell
+### Initialize the auth settings for your google account
+Initialize-Blogger -ClientId <id> -ClientSecret <secret>
+
+### Fetch the available blogs and set the first blog as the default
+$blogs = Get-BloggerBlogs
+$blogId = $blogs[0].id
+Set-BloggerConfig -Name BlogId $blogId
+
+### Fetch posts
+$posts = Get-BloggerPosts -All
+
+### Download Posts
+$total = $posts.count
+$count = 0
+foreach($post in $posts) {
+   $complete = $count++/$total * 100
+   Write-Progress -Activity "Downloading..." -PercentComplete $complete -Status "$complete% ($count of $total)"
+   $post = Get-BloggerPost -PostId $post.id -Format Markdown -FolderDateFormat "yyyy\\MM" -OutDirectory ".\Posts"
+   Write-Host "Downloaded: $($post.title) - $($post.published)"
+}
+Write-Progress -Activity "Downloading..." -Complete
+```
