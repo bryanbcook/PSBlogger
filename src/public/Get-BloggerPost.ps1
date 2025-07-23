@@ -68,6 +68,7 @@ Function Get-BloggerPost {
     if ($null -eq $result) {
       throw "No post found with PostId '$PostId' in blog '$BlogId'."
     }
+    Write-Verbose "Post: $($result | ConvertTo-Json -Depth 10)"
 
     # Construct a subfolder based on the published date
     if ($FolderDateFormat -and $result.published) {
@@ -80,12 +81,14 @@ Function Get-BloggerPost {
     # Ensure the output directory exists
     if (!(Test-Path -Path $OutDirectory)) {
       try {
+        Write-Verbose "Creating output directory: $OutDirectory"
         New-Item -ItemType Directory -Path $OutDirectory -Force | Out-Null
       }
       catch {
         throw "Failed to create output directory '$OutDirectory': $($_.Exception.Message)"
       }
     }
+    Write-Verbose "Using output directory: $OutDirectory"
 
     # Extract the HTML content
     $htmlContent = $result.content
@@ -111,17 +114,21 @@ Function Get-BloggerPost {
 
         # Save the Post to a Markdown file
         "Markdown" {
-
+          
           $title = $result.title
           $frontMatter = [ordered]@{
             postId = $result.id
           }
-          if ($result['labels']) {
+          if ($result.PSObject.Properties.Name -contains "labels") {
+            Write-Verbose "Using post labels: $($result.labels)"
             $frontMatter['tags'] = $result.labels
           } else {
+            Write-Verbose "No labels found in post, using empty tags."
             $frontMatter['tags'] = @()
           }
+          Write-Verbose "Saving frontmatter: $($frontMatter | ConvertTo-Json -Depth 10)"
           $file = "$title.md"
+          
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
           ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null
           Set-MarkdownFrontMatter -File $filePath -Replace $frontMatter
@@ -140,7 +147,7 @@ Function Get-BloggerPost {
       return $result
     }
     catch {
-      throw "Failed to save post content to file '$filePath': $($_.Exception.Message)"
+      throw "Failed to save post content: $($_.Exception.Message)"
     }
   }
   catch {
