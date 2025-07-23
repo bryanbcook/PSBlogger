@@ -116,6 +116,11 @@ Function Get-BloggerPost {
           $frontMatter = [ordered]@{
             postId = $result.id
           }
+          if ($result['labels']) {
+            $frontMatter['tags'] = $result.labels
+          } else {
+            $frontMatter['tags'] = @()
+          }
           $file = "$title.md"
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
           ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null

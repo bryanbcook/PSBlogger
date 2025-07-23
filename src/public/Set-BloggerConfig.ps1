@@ -3,12 +3,12 @@ Function Set-BloggerConfig
   [CmdletBinding()]
   Param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("BlogId","PandocAdditionalArgs","PandocHtmlFormat","PandocMarkdownFormat")]
+    [ValidateSet("BlogId","PandocAdditionalArgs","PandocHtmlFormat","PandocMarkdownFormat","ExcludeLabels")]
     [string]$Name,
 
     [Parameter(Mandatory=$true)]
     [AllowEmptyString()]
-    [string]$Value
+    $Value
   )
   $userPreferences = [pscustomobject]@{}
 

@@ -11,6 +11,7 @@ Function Get-BloggerSession
       PandocTemplate = "$($env:USERPROFILE)\\.PSBlogger\\template.html"
       PandocAdditionalArgs = "--html-q-tags --ascii"
       BlogId = $null
+      ExcludeLabels = @()
     }
 
   if (Test-Path $session.UserPreferences)
