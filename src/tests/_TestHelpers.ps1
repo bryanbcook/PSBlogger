@@ -11,7 +11,7 @@ function New-BlogPost($id) {
     .SYNOPSIS
     Blogger Blog post
   #>
-  @{ id=$id }
+  [pscustomobject]@{ id=$id }
 }
 
 
