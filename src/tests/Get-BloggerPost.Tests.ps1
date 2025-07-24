@@ -40,16 +40,16 @@ Describe "Get-BloggerPost" {
 
         # setup blog post retrieval
         Mock Invoke-GAPi {
-          return [pscustomobject]@{ content = "<html>Test content</html>" }
+          return [pscustomobject]@{ content = "<p>Test content</p>" }
         }
       }            
             
       # act
-      $result = Get-BloggerPost -PostId "123" -Format HTML -OutDirectory $OutDirectory
+      Get-BloggerPost -PostId "123" -Format HTML -OutDirectory $OutDirectory
 
       # assert
-      $result | Should -Not -BeNullOrEmpty
-      Test-Path -Path (Join-Path -Path $OutDirectory -ChildPath "123.html") | Should -BeTrue
+      $outputFile = Join-Path -Path $OutDirectory -ChildPath "123.html"
+      Test-Path -Path $outputFile | Should -BeTrue
     }
   }
     
@@ -64,7 +64,7 @@ Describe "Get-BloggerPost" {
     It "Should call correct API endpoint" {
       InModuleScope PSBlogger {
         Mock Invoke-GApi { 
-          return [pscustomobject]@{ content = "<html>Test content</html>" }
+          return [pscustomobject]@{ content = "<p>Test content</p>" }
         } -ParameterFilter { 
           $uri -eq "https://www.googleapis.com/blogger/v3/blogs/test-blog-id/posts/123" 
         } -Verifiable
@@ -131,7 +131,7 @@ Describe "Get-BloggerPost" {
 
         # mock post retrieval
         Mock Invoke-GApi {
-          return @{ content = "<html>Test content</html>" }
+          return @{ content = "<p>Test content</p>" }
         }
       }
     }
@@ -366,5 +366,46 @@ Describe "Get-BloggerPost" {
       # assert
       Test-Path "TestDrive:\123.html" | Should -BeTrue
     }
+  }
+
+  Context "PassThru" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        # Mock the session to return a test blog ID
+        $BloggerSession.BlogId = "test-blog-id"
+
+        # mock post retrieval
+        Mock Invoke-GApi {
+          return @{ content = "<p>Test content</p>" }
+        }
+      }
+    }
+
+    It "Should return post object when not persisting output to disk" {
+      # act
+      $result = Get-BloggerPost -PostId "123"
+
+      # assert
+      $result | Should -Not -BeNullOrEmpty
+    }
+
+    It "Should not return a post object when persisting to disk" {
+      # act
+      $result = Get-BloggerPost -PostId "123" -Format HTML -OutDirectory TestDrive:\
+
+      # assert
+      $result | Should -BeNullOrEmpty
+    }
+
+    It "Should return post object when persisting to disk with PassThru specified" {
+      # act
+      $result = Get-BloggerPost -PostId "123" -Format HTML -OutDirectory TestDrive:\ -PassThru
+
+      # assert
+      $result | Should -Not -BeNullOrEmpty
+    }
+
+
   }
 }
