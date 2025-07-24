@@ -1,22 +1,22 @@
 <#
 .SYNOPSIS
-    Publishes local images from a markdown file to Google Drive and updates the markdown file with the new URLs.
+  Publishes local images from a markdown file to Google Drive and updates the markdown file with the new URLs.
 
 .DESCRIPTION
-    This function finds all local images referenced in a markdown file, uploads them to Google Drive,
-    sets public permissions, and updates the markdown file with the new Google Drive URLs.
+  This function finds all local images referenced in a markdown file, uploads them to Google Drive,
+  sets public permissions, and updates the markdown file with the new Google Drive URLs.
 
 .PARAMETER File
-    The path to the markdown file containing image references.
+  The path to the markdown file containing image references.
 
 .PARAMETER Force
-    If specified, will overwrite existing files in Google Drive with the same name.
+  If specified, will overwrite existing files in Google Drive with the same name.
 
 .EXAMPLE
-    Publish-MarkdownDriveImages -File "blog-post.md"
+  Publish-MarkdownDriveImages -File "blog-post.md"
 
 .EXAMPLE
-    Publish-MarkdownDriveImages -File "blog-post.md" -Force
+  Publish-MarkdownDriveImages -File "blog-post.md" -Force
 #>
 Function Publish-MarkdownDriveImages
 {

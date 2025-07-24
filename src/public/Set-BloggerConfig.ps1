@@ -1,3 +1,21 @@
+<#
+.SYNOPSIS
+  Updates the local user preferences
+
+.DESCRIPTION
+  Updates local user preferences that are used in Cmdlets in this module.
+
+.PARAMETER Name
+  Name of the user preferene to set. Valid values are:
+  - BlogId: The ID of the Blogger blog to use.
+  - PandocAdditionalArgs: Additional arguments to pass to Pandoc when converting Markdown to HTML.
+  - PandocHtmlFormat: The HTML format to use when converting Markdown to HTML.
+  - PandocMarkdownFormat: The Markdown format to use when converting HTML to Markdown.
+  - ExcludeLabels: Labels to exclude when publishing to Blogger.
+
+.PARAMETER Value
+  The value to set for the specified user preference. Specify an empty string to remove the preference.
+#>
 Function Set-BloggerConfig
 {
   [CmdletBinding()]

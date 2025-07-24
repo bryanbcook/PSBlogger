@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+  Updates or Replaces the FrontMatter in a Markdown document
+
+.DESCRIPTION
+  Updates or Replaces the FrontMatter in a Markdown document with the specified values.
+
+.PARAMETER File
+  The path to the Markdown file to update.
+
+.PARAMETER Update
+  A hashtable of values to update in the front matter. If a key does not exist, it will be added.
+
+.PARAMETER Replace
+  An ordered dictionary to replace the entire front matter. This will overwrite any existing front matter.
+
+.EXAMPLE
+  Set-MarkdownFrontMatter -File "post.md" -Update @{title="New Title"; postid="12345"}
+
+.EXAMPLE
+  Set-MarkdownFrontMatter -File "post.md" -Replace @{title="New Title"; postid="12345"; date="2023-10-01"}
+#>
 Function Set-MarkdownFrontMatter
 {
   [CmdletBinding(SupportsShouldProcess=$true)]

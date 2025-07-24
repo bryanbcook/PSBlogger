@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Convert HTML content or a HTML file to Markdown using Pandoc
+  Convert HTML content or a HTML file to Markdown using Pandoc
 
 .PARAMETER File
-    The file path of the html file. Required when Content is not specified.
+  The file path of the html file. Required when Content is not specified.
 
 .PARAMETER Content
-    The HTML content to convert to Markdown. Required when File is not specified.
+  The HTML content to convert to Markdown. Required when File is not specified.
 
 .PARAMETER OutFile
-    The resulting markdown file, if specified.
+  The resulting markdown file, if specified.
 
 #>
 function ConvertTo-MarkdownFromHtml {
