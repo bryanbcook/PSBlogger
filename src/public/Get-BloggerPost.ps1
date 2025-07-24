@@ -143,7 +143,7 @@ Function Get-BloggerPost {
           $file = "$title.md"
           
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
-          ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null
+          ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath
           Set-MarkdownFrontMatter -File $filePath -Replace $frontMatter
           Write-Verbose "Post content saved to: $filePath"
         }

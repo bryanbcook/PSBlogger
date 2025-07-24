@@ -1,79 +1,90 @@
 Describe "ConvertTo-MarkdownFromHtml" {
   BeforeAll {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
-    
+    $script:inFile = "TestDrive:\123.html"
+    $script:outFile = "TestDrive:\123.md"
+    $script:htmlContent = "<h1>Hello World</h1>"
+    Set-Content -Path $script:inFile -Value $script:htmlContent
   }
 
   BeforeEach {
     Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
+  AfterEach {
+    if (Test-Path $outFile) {
+      Remove-Item $outFile -Force
+    }
+  }
+
   Context "Using Content" {
-
-    BeforeEach {
-      $outFile = "TestDrive:\123.md"
-      $htmlContent = "<h1>Hello World</h1>"
-    }
-
-    AfterEach {
-      if (Test-Path $outFile) {
-        Remove-Item $outFile -Force
-      }
-    }
-
-    It "Should save HTML content to a markdown file" {
-      # act
-      ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFile
-
-      # assert
-      Test-Path $outFile | Should -BeTrue
-    }
 
     It "Should convert HTML content to Markdown file" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -Content $htmlContent -OutFile $outFile
+      ConvertTo-MarkdownFromHtml -Content $script:htmlContent -OutFile $script:outFile
 
       # assert
-      $content = (Get-Content -Path $outFile -Raw).Split("`r")
+      Test-Path $script:outFile | Should -BeTrue
+      $content = (Get-Content -Path $script:outFile -Raw).Split("`r")
       $content[0] | Should -Be "# Hello World"
     }
 
     It "Should not persist to disk if OutFile is not specified" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -Content $htmlContent
+      $content = ConvertTo-MarkdownFromHtml -Content $script:htmlContent
 
       # assert
       $content | Should -Not -BeNullOrEmpty
-      Test-Path $outFile | Should -BeFalse
+      Test-Path $script:outFile | Should -BeFalse
+    }
+
+    It "Should return content when writing to disk if PassThru is specified" {
+      # act
+      $content = ConvertTo-MarkdownFromHtml -Content $script:htmlContent -OutFile $script:outFile -PassThru
+
+      # assert
+      $content | Should -Not -BeNullOrEmpty
+      Test-Path $script:outFile | Should -BeTrue
     }
   }
   
   Context "Using File" {
 
-    BeforeEach {
-      $htmlContent = "<h1>Hello World</h1>"
-      $htmlFile = "TestDrive:\123.html"
-      $markdownFile = "TestDrive:\123.md"
-      Set-Content -Path $htmlFile -Value $htmlContent
+    It "Should convert HTML content to Markdown and persist to OutFile" {
+      # act
+      ConvertTo-MarkdownFromHtml -File $script:inFile -OutFile $script:outFile
+
+      # assert
+      Test-Path $script:outFile | Should -BeTrue
+      $content = (Get-Content -Path $script:outFile -Raw).Split("`r")
+      $content[0] | Should -Be "# Hello World"
     }
 
     It "Should convert HTML file to Markdown" {
       # act
-      $content = ConvertTo-MarkdownFromHtml -File $htmlFile -OutFile $markdownFile
-
-      # assert
-      Test-Path $markdownFile | Should -BeTrue
-      $content = (Get-Content -Path $markdownFile -Raw).Split("`r")
-      $content[0] | Should -Be "# Hello World"
-    }
-
-    It "Should delete temporary file" {
-      # act
-      $content = ConvertTo-MarkdownFromHtml -File $htmlFile
+      $content = ConvertTo-MarkdownFromHtml -File $script:inFile
 
       # assert
       $content | Should -Not -BeNullOrEmpty
-      Test-Path $markdownFile | Should -BeFalse
+      $content | Should -BeLike "# Hello World*"
+    }
+
+    It "Should delete temporary OutFile if OutFile is not specified" {
+      # act
+      $content = ConvertTo-MarkdownFromHtml -File $script:inFile
+
+      # assert
+      $content | Should -Not -BeNullOrEmpty
+      Test-Path $script:outFile | Should -BeFalse
+    }
+
+    It "Should return content when writing to disk if PassThru is specified" {
+      # act
+      $content = ConvertTo-MarkdownFromHtml -File $script:inFile -OutFile $script:outFile -PassThru
+
+      # assert
+      $content | Should -Not -BeNullOrEmpty
+      Test-Path $script:outFile | Should -BeTrue
     }
   }
 }
