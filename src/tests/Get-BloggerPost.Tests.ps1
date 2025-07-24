@@ -40,7 +40,7 @@ Describe "Get-BloggerPost" {
 
         # setup blog post retrieval
         Mock Invoke-GAPi {
-          return @{ content = "<html>Test content</html>" }
+          return [pscustomobject]@{ content = "<html>Test content</html>" }
         }
       }            
             
@@ -64,7 +64,7 @@ Describe "Get-BloggerPost" {
     It "Should call correct API endpoint" {
       InModuleScope PSBlogger {
         Mock Invoke-GApi { 
-          return @{ content = "<html>Test content</html>" }
+          return [pscustomobject]@{ content = "<html>Test content</html>" }
         } -ParameterFilter { 
           $uri -eq "https://www.googleapis.com/blogger/v3/blogs/test-blog-id/posts/123" 
         } -Verifiable
@@ -179,7 +179,7 @@ Describe "Get-BloggerPost" {
 
         # mock post retrieval
         Mock Invoke-GApi {
-          return @{ 
+          return [pscustomobject]@{ 
             id = $postId
             title = "Test Post"
             published = [datetime]"2023-10-01T17:30:00-04:00"
@@ -232,7 +232,7 @@ Describe "Get-BloggerPost" {
 
         # mock post retrieval
         Mock Invoke-GApi {
-          return @{ 
+          return [pscustomobject]@{ 
             id = $postId
             title = "Test Post"
             published = [datetime]"2023-10-01T17:30:00-04:00"
@@ -260,7 +260,7 @@ Describe "Get-BloggerPost" {
 
         # mock post retrieval
         Mock Invoke-GApi {
-          return @{ 
+          return [pscustomobject]@{ 
             id = $postId
             title = "Test Post"
             published = [datetime]"2023-10-01T17:30:00-04:00"
@@ -306,7 +306,7 @@ Describe "Get-BloggerPost" {
 
         # mock post retrieval
         Mock Invoke-GApi {
-          return @{ 
+          return [pscustomobject]@{ 
             id = $postId
             title = "Test Post"
             published = [datetime]"2023-10-01T17:30:00-04:00"
