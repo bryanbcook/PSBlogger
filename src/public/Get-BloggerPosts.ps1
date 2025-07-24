@@ -55,8 +55,14 @@ Function Get-BloggerPosts {
     
       $result.items
 
-      # loop if pageToken is present and -All switch is set
-      $pageToken = $result.nextPageToken
+      # fetch continuation token
+      if ($result.PSObject.Properties.name -contains "nextPageToken") {
+        $pageToken = $result.nextPageToken
+      }
+      else {
+        $pageToken = $null
+      }
+      # loop if pageToken is present and -All switch is set      
       $done = ($All.IsPresent -and $All -and [string]::IsNullOrEmpty($pageToken)) -or !$All.IsPresent
     }
   }

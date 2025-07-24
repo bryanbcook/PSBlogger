@@ -12,7 +12,7 @@ Describe "Get-BloggerPosts" {
 
         # Setup initial get-bloggerposts
         Mock Invoke-GApi {
-          return @{
+          return [pscustomobject]@{
             items = @(
               @{ id = "1"; title = "Post 1"; published = "2023-10-01T00:00:00Z" },
               @{ id = "2"; title = "Post 2"; published = "2023-10-02T00:00:00Z" }
@@ -24,11 +24,10 @@ Describe "Get-BloggerPosts" {
 
         # setup second call
         Mock Invoke-GApi {
-          @{
+          return [pscustomobject]@{
             items = @(
               @{ id = "3"; title = "Post 3"; published = "2023-10-03T00:00:00Z" }
             )
-            nextPageToken = $null
           }
         } -ParameterFilter { $uri -like "*pageToken*" }
       }
@@ -48,7 +47,7 @@ Describe "Get-BloggerPosts" {
       InModuleScope PSBlogger {
         # Setup initial get-bloggerposts
         Mock Invoke-GApi {
-          return @{
+          return [pscustomobject]@{
             items = @(
               @{ id = "1"; title = "Post 1"; published = "2023-10-01T00:00:00Z" },
               @{ id = "2"; title = "Post 2"; published = "2023-10-02T00:00:00Z" }
@@ -80,7 +79,7 @@ Describe "Get-BloggerPosts" {
 
         # Mock the API call to return posts after a specific date
         Mock Invoke-GApi {
-          return @{
+          return [pscustomobject]@{
             items = @(
               @{ id = "1"; title = "Post 1"; published = "2023-10-01T00:00:00Z" },
               @{ id = "2"; title = "Post 2"; published = "2023-10-02T00:00:00Z" }
@@ -105,7 +104,7 @@ Describe "Get-BloggerPosts" {
 
         # Mock the API call to return all posts
         Mock Invoke-GApi {
-          return @{
+          return [pscustomobject]@{
             items = @(
               @{ id = "1"; title = "Post 1"; published = "2023-10-01T00:00:00Z" },
               @{ id = "2"; title = "Post 2"; published = "2023-10-02T00:00:00Z" }
