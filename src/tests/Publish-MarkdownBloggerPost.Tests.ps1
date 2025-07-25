@@ -199,6 +199,52 @@ postId: "123456"
     $postInfo.postid | Should -Be "post1" -Because "Markdown file should be updated with post id after publishing for the first time."
   }
 
+  Context "Open post after publishing" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        Mock Set-MarkdownFrontMatter {}
+      }
+    }
+
+    It "Should pass Open parameter to Publish-BloggerPost when specified" {
+      # arrange
+      $testFile = "TestDrive:\testfile.md"
+      Set-Content -Path $testFile -Value "# hello world"
+
+      InModuleScope PSBlogger {
+        Mock Publish-BloggerPost -ParameterFilter { $Open -eq $true } -Verifiable {
+          return @{ id = "123" }
+        }
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $testFile -BlogId 1234 -Open
+
+      # assert
+      Should -InvokeVerifiable
+    }
+
+    It "Should not pass Open parameter to Publish-BloggerPost by default" {
+      # arrange
+      $testFile = "TestDrive:\testfile.md"
+      Set-Content -Path $testFile -Value "# hello world"
+
+      InModuleScope PSBlogger {
+        Mock Publish-BloggerPost -ParameterFilter { $Open -eq $false } -Verifiable {
+          return [pscustomobject]@{ id = "123" }
+        }
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $testFile -BlogId 1234
+
+      # assert
+      Should -InvokeVerifiable
+    }
+
+  }
+
   Context "Upload Images to Google Drive" {
 
     BeforeEach {

@@ -23,6 +23,9 @@
 .PARAMETER Draft
   Optional. If specified, the post will be saved as a draft instead of being published.
 
+.PARAMETER Open
+  Optional. If specified, launches a browser to view the post after publishing.
+
 #>
 Function Publish-BloggerPost {
   [CmdletBinding()]
@@ -39,9 +42,14 @@ Function Publish-BloggerPost {
     [Parameter(Mandatory = $true)]
     [string]$Content,
 
+    [Parameter(Mandatory = $false)]
     [string[]]$Labels,
 
-    [switch]$Draft
+    [Parameter(Mandatory = $false)]
+    [switch]$Draft,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Open
   )
 
   $uri = "https://www.googleapis.com/blogger/v3/blogs/$BlogId/posts"
@@ -77,15 +85,17 @@ Function Publish-BloggerPost {
 
   $post = Invoke-GApi -Uri $uri -Body ($body | ConvertTo-Json) -Method $method
 
-  $postUrl = `
-    if ($Draft) {
-    "https://www.blogger.com/blog/post/edit/preview/$BlogId/$($post.id)"
-  }
-  else {
-    $post.url
-  }
+  if ($Open) {
+    $postUrl = `
+      if ($Draft) {
+      "https://www.blogger.com/blog/post/edit/preview/$BlogId/$($post.id)"
+    }
+    else {
+      $post.url
+    }
 
-  Start-Process $postUrl
+    Start-Process $postUrl
+  }
 
   return $post
 }
