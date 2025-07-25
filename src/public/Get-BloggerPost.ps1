@@ -18,14 +18,28 @@
 .PARAMETER OutDirectory
   The directory where the HTML file will be saved. If not specified, uses the current directory.
 
-.EXAMPLE
-  Get-BloggerPost -PostId "1234567890123456789"
+.PARAMETER PassThru
+  If specified, the function will return the post object instead of just saving it to a file
 
 .EXAMPLE
+  # obtain a post from the blog defined in the user preferences
+  $post = Get-BloggerPost -PostId "1234567890123456789"
+
+.EXAMPLE
+  # obtain a post from a specified blog and save it as HTML in a specific directory
   Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format HTML -OutDirectory "C:\temp"
 
 .EXAMPLE
+  # obtain a post from a specified blog and save it as Markdown in a specific directory with a date-based folder structure
   Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format Markdown -DateFormat "YYYY\\MM" -OutDirectory "C:\blogposts"
+
+.EXAMPLE
+  # obtain a post from a specified blog and save it as JSON in the current directory
+  Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format JSON
+
+.EXAMPLE
+  # obtain a post from a specified blog, write it to disk and return the post object
+  $post = Get-BloggerPost -BlogId "9876543210987654321" -PostId "1234567890123456789" -Format Markdown -PassThru
 #>
 Function Get-BloggerPost {
   [CmdletBinding()]
@@ -46,7 +60,10 @@ Function Get-BloggerPost {
     [string]$FolderDateFormat,
 
     [Parameter(ParameterSetName = "Persist")]
-    [string]$OutDirectory = (Get-Location).Path
+    [string]$OutDirectory = (Get-Location).Path,
+
+    [Parameter(ParameterSetName = "Persist")]
+    [switch]$PassThru
   )
 
   if (!$PSBoundParameters.ContainsKey("BlogId")) {
@@ -54,10 +71,6 @@ Function Get-BloggerPost {
     if ([string]::IsNullOrEmpty($BlogId) -or $BlogId -eq 0) {
       throw "BlogId not specified and no default BlogId found in settings."
     }
-  }
-
-  if ([string]::IsNullOrEmpty($PostId)) {
-    throw "PostId is required."
   }
 
   try {
@@ -130,7 +143,7 @@ Function Get-BloggerPost {
           $file = "$title.md"
           
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
-          ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath > $null
+          ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath
           Set-MarkdownFrontMatter -File $filePath -Replace $frontMatter
           Write-Verbose "Post content saved to: $filePath"
         }
@@ -144,7 +157,10 @@ Function Get-BloggerPost {
       }  
 
       # Return the post object for further processing if needed
-      return $result
+      if (!($PSCmdlet.ParameterSetName -eq "Persist") -or ($PassThru.IsPresent -and $PassThru)) {
+        Write-Verbose "Returning blog post object"
+        return $result
+      }
     }
     catch {
       throw "Failed to save post content: $($_.Exception.Message)"

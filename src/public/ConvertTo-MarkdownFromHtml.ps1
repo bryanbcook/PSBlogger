@@ -11,6 +11,32 @@
 .PARAMETER OutFile
   The resulting markdown file, if specified.
 
+.PARAMETER PassThru
+  Return markdown content as output, in addition to writing it to disk.
+
+.EXAMPLE
+  # Convert HTML content to Markdown and save to a file
+  ConvertTo-MarkdownFromHtml -Content "<h1>Hello World</h1>" -OutFile "C:\path\to\file.md"
+
+.EXAMPLE
+  # Convert a HTML file to Markdown and save to a file
+  ConvertTo-MarkdownFromHtml -File "C:\path\to\file.html" -OutFile "C:\path\to\file.md"
+
+.EXAMPLE
+  # Convert a HTML file to Markdown and return the content
+  $content = ConvertTo-MarkdownFromHtml -File "C:\path\to\file.html"
+
+.EXAMPLE
+  # Convert HTML content to Markdown and return the content
+  $content = ConvertTo-MarkdownFromHtml -Content "<h1>Hello World</h1>"
+
+.EXAMPLE
+  # Convert HTML content to Markdown and save to a file, returning the content
+  $content = ConvertTo-MarkdownFromHtml -Content "<h1>Hello World</h1>" -OutFile "C:\path\to\file.md" -PassThru
+
+.EXAMPLE
+  # Convert a HTML file to Markdown and save to a file, returning the content
+  $content = ConvertTo-MarkdownFromHtml -File "C:\path\to\file.html" -OutFile "C:\path\to\file.md" -PassThru
 #>
 function ConvertTo-MarkdownFromHtml {
   param(
@@ -22,8 +48,12 @@ function ConvertTo-MarkdownFromHtml {
     [string]$Content,
 
     [Parameter(ParameterSetName = "FromFile")]
-    [Parameter(Mandatory=$false, ParameterSetName = "FromContent")]
-    [string]$OutFile
+    [Parameter(ParameterSetName = "FromContent")]
+    [string]$OutFile,
+
+    [Parameter(ParameterSetName = "FromFile")]
+    [Parameter(ParameterSetName = "FromContent")]
+    [switch]$PassThru
   )
 
   # when FromContent is specified, write the content to a temporary file
@@ -69,5 +99,9 @@ function ConvertTo-MarkdownFromHtml {
     Remove-Item $OutFile
   } 
 
-  return $content
+  # return output if not persisting to disk or PassThru is specified
+  if (!$PSBoundParameters.ContainsKey("OutFile") -or ($PassThru.IsPresent -and $PassThru)) {
+    Write-Verbose "Returning content"
+    return $content
+  }
 }
