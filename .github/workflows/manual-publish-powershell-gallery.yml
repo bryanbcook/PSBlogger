@@ -65,7 +65,7 @@ jobs:
         }
         
         # Test that the module can be imported successfully
-        $moduleDir = Split-Path $manifestPath
+        $moduleDir = Resolve-Path (Split-Path $manifestPath)
         Import-Module $moduleDir -Force
         $loadedModule = Get-Module PSBlogger
         Write-Host "Successfully imported module. Exported commands:"
