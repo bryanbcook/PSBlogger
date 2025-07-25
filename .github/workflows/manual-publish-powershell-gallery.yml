@@ -65,8 +65,7 @@ jobs:
         }
         
         # Test that the module can be imported successfully
-        $fullPath = Resolve-Path $manifestPath
-        Import-Module $fullPath -Force
+        Import-Module $manifestPath -Force
         $loadedModule = Get-Module PSBlogger
         Write-Host "Successfully imported module. Exported commands:"
         $loadedModule.ExportedCommands.Keys | Sort-Object | ForEach-Object { Write-Host "  - $_" }
