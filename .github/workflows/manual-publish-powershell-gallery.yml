@@ -141,11 +141,19 @@ jobs:
         
         # Publish the module
         try {
+          # Create a proper module structure for publishing
+          $tempModuleDir = Join-Path $env:TEMP "PSBlogger"
+          if (Test-Path $tempModuleDir) {
+            Remove-Item $tempModuleDir -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $tempModuleDir -Force | Out-Null
+          Copy-Item "./src/*" $tempModuleDir -Recurse -Force
+          
           if ($isDryRun) {
-            Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -WhatIf -Verbose
+            Publish-Module -Path $tempModuleDir -WhatIf -Verbose
             Write-Host "🧪 DRY RUN: Would publish to PowerShell Gallery (no actual publishing)"
           } else {
-            Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
+            Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
             Write-Host "✅ Successfully published to PowerShell Gallery"
           }
         } catch {
