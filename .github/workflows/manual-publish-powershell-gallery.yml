@@ -106,7 +106,7 @@ jobs:
     - name: Publish to PowerShell Gallery
       shell: pwsh
       env:
-        NUGET_API_KEY: ${{ secrets.POWERSHELLGALLERY_API }}
+        NUGET_API_KEY: ${{ secrets.POWERSHELLGALLERY_APIKEY }}
       run: |
         $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
         
@@ -115,7 +115,7 @@ jobs:
         } else {
           # Validate that we have the API key
           if (-not $env:NUGET_API_KEY) {
-            throw "POWERSHELLGALLERY_API secret is not set"
+            throw "POWERSHELLGALLERY_APIKEY secret is not set"
           }
         }
         
