@@ -46,7 +46,6 @@ jobs:
       run: |
         # Test module manifest
         $manifestPath = "./src/PSBlogger.psd1"
-        $manifestDefinition = "./src/PSBlogger.psm1"
         Write-Host "Testing module manifest at: $manifestPath"
         
         # Test manifest syntax
@@ -66,7 +65,9 @@ jobs:
         }
         
         # Test that the module can be imported successfully
-        Import-Module $manifestDefinition -Force
+        # Use absolute path to the manifest file
+        $manifestAbsolutePath = Resolve-Path $manifestPath
+        Import-Module $manifestAbsolutePath -Force
         $loadedModule = Get-Module PSBlogger
         Write-Host "Successfully imported module. Exported commands:"
         $loadedModule.ExportedCommands.Keys | Sort-Object | ForEach-Object { Write-Host "  - $_" }
