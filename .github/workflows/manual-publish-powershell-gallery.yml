@@ -3,15 +3,23 @@ name: Manual Publish to PowerShell Gallery
 on:
   workflow_dispatch:
     inputs:
-      confirm_publish:
-        description: 'Type "PUBLISH" to confirm you want to publish to PowerShell Gallery'
+      mode:
+        description: 'Select mode'
         required: true
+        type: choice
+        options:
+        - 'DRY_RUN'
+        - 'PUBLISH'
+        default: 'DRY_RUN'
+      confirm_publish:
+        description: 'If PUBLISH mode: Type "CONFIRM" to proceed'
+        required: false
         type: string
 
 jobs:
   publish:
     runs-on: windows-latest
-    if: github.event.inputs.confirm_publish == 'PUBLISH'
+    if: github.event.inputs.mode == 'DRY_RUN' || (github.event.inputs.mode == 'PUBLISH' && github.event.inputs.confirm_publish == 'CONFIRM')
     
     steps:
     - name: Checkout code
@@ -98,9 +106,15 @@ jobs:
       env:
         NUGET_API_KEY: ${{ secrets.POWERSHELLGALLERY_API }}
       run: |
-        # Validate that we have the API key
-        if (-not $env:NUGET_API_KEY) {
-          throw "POWERSHELLGALLERY_API secret is not set"
+        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+        
+        if ($isDryRun) {
+          Write-Host "🧪 DRY RUN MODE - No actual publishing will occur"
+        } else {
+          # Validate that we have the API key
+          if (-not $env:NUGET_API_KEY) {
+            throw "POWERSHELLGALLERY_API secret is not set"
+          }
         }
         
         Write-Host "Publishing PSBlogger version ${{ steps.version.outputs.version }} to PowerShell Gallery..."
@@ -109,7 +123,11 @@ jobs:
         try {
           $existingModule = Find-Module -Name PSBlogger -RequiredVersion ${{ steps.version.outputs.version }} -ErrorAction SilentlyContinue
           if ($existingModule) {
-            throw "Version ${{ steps.version.outputs.version }} already exists on PowerShell Gallery"
+            if ($isDryRun) {
+              Write-Host "⚠️ DRY RUN: Version ${{ steps.version.outputs.version }} already exists on PowerShell Gallery"
+            } else {
+              throw "Version ${{ steps.version.outputs.version }} already exists on PowerShell Gallery"
+            }
           }
         } catch {
           if ($_.Exception.Message -notlike "*Version*already exists*") {
@@ -119,10 +137,15 @@ jobs:
           }
         }
         
-        # Actually publish the module (no -WhatIf here)
+        # Publish the module
         try {
-          Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
-          Write-Host "✅ Successfully published to PowerShell Gallery"
+          if ($isDryRun) {
+            Publish-Module -Path "./src" -WhatIf -Verbose
+            Write-Host "🧪 DRY RUN: Would publish to PowerShell Gallery (no actual publishing)"
+          } else {
+            Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
+            Write-Host "✅ Successfully published to PowerShell Gallery"
+          }
         } catch {
           Write-Error "❌ Failed to publish to PowerShell Gallery: $_"
           throw
@@ -131,6 +154,13 @@ jobs:
     - name: Create Git Tag and Release
       shell: pwsh
       run: |
+        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+        
+        if ($isDryRun) {
+          Write-Host "🧪 DRY RUN: Would create tag v${{ steps.version.outputs.version }} and GitHub release"
+          return
+        }
+        
         # Configure git
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
@@ -176,6 +206,7 @@ jobs:
         echo "release-notes=$releaseNotes" >> $env:GITHUB_OUTPUT
     
     - name: Create GitHub Release
+      if: github.event.inputs.mode == 'PUBLISH'
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -190,6 +221,18 @@ jobs:
       if: success()
       shell: pwsh
       run: |
-        Write-Host "🎉 Successfully published PSBlogger v${{ steps.version.outputs.version }} to PowerShell Gallery!"
-        Write-Host "📦 Module is now available at: https://www.powershellgallery.com/packages/PSBlogger/${{ steps.version.outputs.version }}"
-        Write-Host "🏷️ Created release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+        
+        if ($isDryRun) {
+          Write-Host "🧪 DRY RUN COMPLETED SUCCESSFULLY!"
+          Write-Host "✅ Module manifest validation passed"
+          Write-Host "✅ All tests passed"
+          Write-Host "✅ Module can be imported successfully"
+          Write-Host ""
+          Write-Host "Ready to publish PSBlogger v${{ steps.version.outputs.version }} to PowerShell Gallery"
+          Write-Host "To actually publish, run this workflow again with PUBLISH mode and type CONFIRM"
+        } else {
+          Write-Host "🎉 Successfully published PSBlogger v${{ steps.version.outputs.version }} to PowerShell Gallery!"
+          Write-Host "📦 Module is now available at: https://www.powershellgallery.com/packages/PSBlogger/${{ steps.version.outputs.version }}"
+          Write-Host "🏷️ Created release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+        }
