@@ -1,6 +1,13 @@
-name: Manual Publish to PowerShell Gallery
+name: PowerShell Gallery Publishing
 
 on:
+  # Automatic trigger: when module version changes on main branch
+  push:
+    branches: [ main ]
+    paths: 
+      - 'src/PSBlogger.psd1'
+  
+  # Manual trigger: workflow dispatch with options
   workflow_dispatch:
     inputs:
       mode:
@@ -17,13 +24,75 @@ on:
         type: string
 
 jobs:
+  # Version check job (only runs for automatic triggers)
+  check-version:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      version-changed: ${{ steps.version-check.outputs.version-changed }}
+      new-version: ${{ steps.version-check.outputs.new-version }}
+      old-version: ${{ steps.version-check.outputs.old-version }}
+    steps:
+    - name: Checkout current commit
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    
+    - name: Check if version changed
+      id: version-check
+      shell: pwsh
+      run: |
+        # Get the current version from the manifest
+        $manifestPath = "src/PSBlogger.psd1"
+        $manifest = Import-PowerShellDataFile -Path $manifestPath
+        $currentVersion = $manifest.ModuleVersion
+        Write-Host "Current version: $currentVersion"
+        
+        # Get the previous version from the previous commit
+        git checkout HEAD~1 -- $manifestPath 2>$null
+        if ($LASTEXITCODE -eq 0) {
+          $previousManifest = Import-PowerShellDataFile -Path $manifestPath
+          $previousVersion = $previousManifest.ModuleVersion
+          Write-Host "Previous version: $previousVersion"
+        } else {
+          Write-Host "No previous version found (first commit?)"
+          $previousVersion = "0.0.0"
+        }
+        
+        # Restore current version
+        git checkout HEAD -- $manifestPath
+        
+        # Check if version changed
+        if ($currentVersion -ne $previousVersion) {
+          Write-Host "Version changed from $previousVersion to $currentVersion"
+          echo "version-changed=true" >> $env:GITHUB_OUTPUT
+          echo "new-version=$currentVersion" >> $env:GITHUB_OUTPUT
+          echo "old-version=$previousVersion" >> $env:GITHUB_OUTPUT
+        } else {
+          Write-Host "Version unchanged: $currentVersion"
+          echo "version-changed=false" >> $env:GITHUB_OUTPUT
+          echo "new-version=$currentVersion" >> $env:GITHUB_OUTPUT
+          echo "old-version=$previousVersion" >> $env:GITHUB_OUTPUT
+        }
+
+  # Main publishing job
   publish:
     runs-on: windows-latest
-    if: github.event.inputs.mode == 'DRY_RUN' || (github.event.inputs.mode == 'PUBLISH' && github.event.inputs.confirm_publish == 'CONFIRM')
+    needs: [check-version]
+    if: |
+      always() && (
+        (github.event_name == 'push' && needs.check-version.outputs.version-changed == 'true') ||
+        (github.event_name == 'workflow_dispatch' && (
+          github.event.inputs.mode == 'DRY_RUN' || 
+          (github.event.inputs.mode == 'PUBLISH' && github.event.inputs.confirm_publish == 'CONFIRM')
+        ))
+      )
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Install PowerShell Module Dependencies
       shell: pwsh
@@ -40,6 +109,21 @@ jobs:
         $version = $manifest.ModuleVersion
         Write-Host "Module version: $version"
         echo "version=$version" >> $env:GITHUB_OUTPUT
+    
+    - name: Determine Run Mode
+      id: run-mode
+      shell: pwsh
+      run: |
+        if ("${{ github.event_name }}" -eq "push") {
+          # Automatic publish on version change
+          echo "is-dry-run=false" >> $env:GITHUB_OUTPUT
+          echo "trigger-type=automatic" >> $env:GITHUB_OUTPUT
+        } else {
+          # Manual workflow dispatch
+          $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+          echo "is-dry-run=$isDryRun" >> $env:GITHUB_OUTPUT
+          echo "trigger-type=manual" >> $env:GITHUB_OUTPUT
+        }
     
     - name: Validate Module Manifest
       shell: pwsh
@@ -108,11 +192,14 @@ jobs:
       env:
         NUGET_API_KEY: ${{ secrets.POWERSHELLGALLERY_APIKEY }}
       run: |
-        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+        $isDryRun = "${{ steps.run-mode.outputs.is-dry-run }}" -eq "true"
+        $triggerType = "${{ steps.run-mode.outputs.trigger-type }}"
         
+        Write-Host "🔧 Trigger: $triggerType"
         if ($isDryRun) {
           Write-Host "🧪 DRY RUN MODE - No actual publishing will occur"
         } else {
+          Write-Host "🚀 PUBLISH MODE - Will publish to PowerShell Gallery"
           # Validate that we have the API key
           if (-not $env:NUGET_API_KEY) {
             throw "POWERSHELLGALLERY_APIKEY secret is not set"
@@ -153,11 +240,10 @@ jobs:
           Copy-Item "./src/PSBlogger.psm1" $tempModuleDir -Force
           Copy-Item "./src/private" $tempModuleDir -Recurse -Force
           Copy-Item "./src/public" $tempModuleDir -Recurse -Force
-          # Exclude: tests, readme.md, reload.ps1
           
           if ($isDryRun) {
-            Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -WhatIf -Verbose
             Write-Host "🧪 DRY RUN: Would publish to PowerShell Gallery (no actual publishing)"
+            Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -WhatIf -Verbose
           } else {
             Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
             Write-Host "✅ Successfully published to PowerShell Gallery"
@@ -168,14 +254,10 @@ jobs:
         }
     
     - name: Create Git Tag and Release
+      if: steps.run-mode.outputs.is-dry-run == 'false'
       shell: pwsh
       run: |
-        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
-        
-        if ($isDryRun) {
-          Write-Host "🧪 DRY RUN: Would create tag v${{ steps.version.outputs.version }} and GitHub release"
-          return
-        }
+        Write-Host "🏷️ Creating Git tag and GitHub release..."
         
         # Configure git
         git config user.name "github-actions"
@@ -193,6 +275,7 @@ jobs:
         }
     
     - name: Get Commit Messages for Release Notes
+      if: steps.run-mode.outputs.is-dry-run == 'false'
       id: release-notes
       shell: pwsh
       run: |
@@ -222,7 +305,7 @@ jobs:
         echo "release-notes=$releaseNotes" >> $env:GITHUB_OUTPUT
     
     - name: Create GitHub Release
-      if: github.event.inputs.mode == 'PUBLISH'
+      if: steps.run-mode.outputs.is-dry-run == 'false'
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -237,7 +320,8 @@ jobs:
       if: success()
       shell: pwsh
       run: |
-        $isDryRun = "${{ github.event.inputs.mode }}" -eq "DRY_RUN"
+        $isDryRun = "${{ steps.run-mode.outputs.is-dry-run }}" -eq "true"
+        $triggerType = "${{ steps.run-mode.outputs.trigger-type }}"
         
         if ($isDryRun) {
           Write-Host "🧪 DRY RUN COMPLETED SUCCESSFULLY!"
@@ -251,4 +335,5 @@ jobs:
           Write-Host "🎉 Successfully published PSBlogger v${{ steps.version.outputs.version }} to PowerShell Gallery!"
           Write-Host "📦 Module is now available at: https://www.powershellgallery.com/packages/PSBlogger/${{ steps.version.outputs.version }}"
           Write-Host "🏷️ Created release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+          Write-Host "🔧 Triggered by: $triggerType"
         }
