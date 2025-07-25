@@ -142,7 +142,7 @@ jobs:
         # Publish the module
         try {
           if ($isDryRun) {
-            Publish-Module -Path "./src" -WhatIf -Verbose
+            Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -WhatIf -Verbose
             Write-Host "🧪 DRY RUN: Would publish to PowerShell Gallery (no actual publishing)"
           } else {
             Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
