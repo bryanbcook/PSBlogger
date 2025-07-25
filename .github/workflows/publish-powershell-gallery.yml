@@ -97,7 +97,9 @@ jobs:
         }
         
         # Test that the module can be imported successfully
-        Import-Module $manifestPath -Force
+        # Use absolute path to the manifest file
+        $manifestAbsolutePath = Resolve-Path $manifestPath
+        Import-Module $manifestAbsolutePath -Force
         $loadedModule = Get-Module PSBlogger
         Write-Host "Successfully imported module. Exported commands:"
         $loadedModule.ExportedCommands.Keys | Sort-Object | ForEach-Object { Write-Host "  - $_" }
@@ -204,7 +206,21 @@ jobs:
         
         # Publish the module
         try {
-          Publish-Module -Path "./src" -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
+          # Create a proper module structure for publishing
+          $tempModuleDir = Join-Path $env:TEMP "PSBlogger"
+          if (Test-Path $tempModuleDir) {
+            Remove-Item $tempModuleDir -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $tempModuleDir -Force | Out-Null
+          
+          # Copy module files excluding tests
+          Copy-Item "./src/PSBlogger.psd1" $tempModuleDir -Force
+          Copy-Item "./src/PSBlogger.psm1" $tempModuleDir -Force
+          Copy-Item "./src/private" $tempModuleDir -Recurse -Force
+          Copy-Item "./src/public" $tempModuleDir -Recurse -Force
+          # Exclude: tests, readme.md, reload.ps1
+          
+          Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
           Write-Host "✅ Successfully published to PowerShell Gallery"
         } catch {
           Write-Error "❌ Failed to publish to PowerShell Gallery: $_"

@@ -147,10 +147,16 @@ jobs:
             Remove-Item $tempModuleDir -Recurse -Force
           }
           New-Item -ItemType Directory -Path $tempModuleDir -Force | Out-Null
-          Copy-Item "./src/*" $tempModuleDir -Recurse -Force
+          
+          # Copy module files excluding tests
+          Copy-Item "./src/PSBlogger.psd1" $tempModuleDir -Force
+          Copy-Item "./src/PSBlogger.psm1" $tempModuleDir -Force
+          Copy-Item "./src/private" $tempModuleDir -Recurse -Force
+          Copy-Item "./src/public" $tempModuleDir -Recurse -Force
+          # Exclude: tests, readme.md, reload.ps1
           
           if ($isDryRun) {
-            Publish-Module -Path $tempModuleDir -WhatIf -Verbose
+            Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -WhatIf -Verbose
             Write-Host "🧪 DRY RUN: Would publish to PowerShell Gallery (no actual publishing)"
           } else {
             Publish-Module -Path $tempModuleDir -NuGetApiKey $env:NUGET_API_KEY -Verbose -Force
