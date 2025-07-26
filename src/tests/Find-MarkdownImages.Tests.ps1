@@ -4,17 +4,9 @@ Describe "Find-MarkdownImages" {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
 
     # Create test images in TestDrive
-    $testImage1 = "TestDrive:\test-image1.png"
-    $testImage2 = "TestDrive:\subfolder\test-image2.jpg"
-    $testImage3 = "TestDrive:\absolute-image.gif"
-    
-    # Create directory structure
-    New-Item -Path "TestDrive:\subfolder" -ItemType Directory -Force
-    
-    # Create dummy image files
-    Set-Content -Path $testImage1 -Value "fake png content"
-    Set-Content -Path $testImage2 -Value "fake jpg content"
-    Set-Content -Path $testImage3 -Value "fake gif content"
+    New-TestImage "TestDrive:\test-image1.png"
+    New-TestImage "TestDrive:\subfolder\test-image2.jpg"
+    New-TestImage "TestDrive:\absolute-image.gif"
   }
 
   Context "Basic image detection" {
@@ -107,7 +99,7 @@ Describe "Find-MarkdownImages" {
     }
   }
 
-  Context "Path resolution" {
+  Context "Image Path resolution" {
     It "Should resolve relative paths correctly" {
       # arrange
       $markdownFile = "TestDrive:\relative.md"
@@ -165,6 +157,68 @@ Describe "Find-MarkdownImages" {
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-image1.png"
       $result[0].RelativePath | Should -Be "../test-image1.png"
+    }
+  }
+
+  Context "Path resolution with attachments directory" {
+    BeforeEach{
+      # create images in the attachments directory
+      New-TestImage "TestDrive:\attachments\test-attachment1.png"
+      New-TestImage "TestDrive:\attachments\subfolder\test-attachment2.jpg"
+    }
+
+    It "Should resolve absolute image in the attachments directory" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments.md"
+      $markdownContent = @(
+        ""
+        "![Image in attachments](test-attachment1.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
+
+    It "Should resolve absolute image with subfolder relative to the attachments directory" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownContent = @(
+        ""
+        "![Image in subfolder](subfolder/test-attachment2.jpg)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
+    }
+
+    It "Should find images in subfolders of the attachments directory when markdown does not specify a subfolder" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownContent = @(
+        ""
+        "![Image in subfolder](test-attachment2.jpg)" # this is in the subfolder
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
     }
   }
 
