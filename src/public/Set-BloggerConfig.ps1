@@ -12,6 +12,7 @@
   - PandocHtmlFormat: The HTML format to use when converting Markdown to HTML.
   - PandocMarkdownFormat: The Markdown format to use when converting HTML to Markdown.
   - ExcludeLabels: Labels to exclude when publishing to Blogger.
+  - AttachmentsDirectory: Folder path to attachments
 
 .PARAMETER Value
   The value to set for the specified user preference. Specify an empty string to remove the preference.
@@ -21,7 +22,7 @@ Function Set-BloggerConfig
   [CmdletBinding()]
   Param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("BlogId","PandocAdditionalArgs","PandocHtmlFormat","PandocMarkdownFormat","ExcludeLabels")]
+    [ValidateSet("BlogId","PandocAdditionalArgs","PandocHtmlFormat","PandocMarkdownFormat","ExcludeLabels","AttachmentsDirectory")]
     [string]$Name,
 
     [Parameter(Mandatory=$true)]

@@ -15,6 +15,7 @@ Describe "Set-BloggerConfig" {
         BlogId = $null
         ExcludeLabels = @()
         UserPreferences = "TestDrive:\UserPreferences.json"
+        AttachmentsDirectory = $null
       }
       
       # Set it as a script-scoped variable (same as the module does)
@@ -25,6 +26,7 @@ Describe "Set-BloggerConfig" {
   It "Should persist new value to <UserPreference> to BloggerSession.UserPreferences" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
     @{ UserPreference="ExcludeLabels"; UserPreferenceValue=@("personal/blog-post") }
+    @{ UserPreference="AttachmentsDirectory"; UserPreferenceValue="c:\attachments"}
   ) {
 
     # act
@@ -40,6 +42,7 @@ Describe "Set-BloggerConfig" {
   It "Should persist new value to <UserPreference> to empty BloggerSession.UserPreferences file" -TestCases @(
     @{ UserPreference="BlogId"; UserPreferenceValue="12345" }
     @{ UserPreference="ExcludeLabels"; UserPreferenceValue=@("personal/blog-post") }
+    @{ UserPreference="AttachmentsDirectory"; UserPreferenceValue="c:\attachments"}
   ) {
     # arrange: empty file
     Set-Content TestDrive:\UserPreferences.json -Value "{}"
