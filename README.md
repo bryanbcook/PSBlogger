@@ -151,7 +151,7 @@ $count = 0
 foreach($post in $posts) {
    $complete = $count++/$total * 100
    Write-Progress -Activity "Downloading..." -PercentComplete $complete -Status "$complete% ($count of $total)"
-   $post = Get-BloggerPost -PostId $post.id -Format Markdown -FolderDateFormat "yyyy\\MM" -OutDirectory ".\Posts"
+   $post = Get-BloggerPost -PostId $post.id -Format Markdown -FolderDateFormat "yyyy\\MM" -OutDirectory ".\Posts" -PassThru
    Write-Host "Downloaded: $($post.title) - $($post.published)"
 }
 Write-Progress -Activity "Downloading..." -Complete
