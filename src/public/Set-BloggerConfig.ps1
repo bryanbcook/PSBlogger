@@ -38,6 +38,17 @@ Function Set-BloggerConfig
     $userPreferences | Out-String | Write-Verbose
   }
 
+  if ($Value) {
+    switch ($Name) {
+      "AttachmentsDirectory" {
+        if (-not (Test-Path -Path $Value -PathType Container)) {
+          throw "AttachmentsDirectory must be a valid directory path."
+        }
+        $Value = (Resolve-Path -Path $Value).Path
+      }
+    }
+  }
+
   if (@($userPreferences.PsObject.Properties).Count -eq 0 -or $Name -notin $userPreferences.PsObject.Properties.Name)
   {
     Write-Verbose "Set-BloggerConfig: Adding Property $Name"

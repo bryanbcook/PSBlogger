@@ -3,6 +3,12 @@ function Set-MarkdownFile($path, $content) {
     .SYNOPSIS
     Set the content of a markdown file
   #>
+    # resolve path
+  $path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
+  $Folder = [System.IO.Path]::GetDirectoryName($path)
+  if (-not (Test-Path -Path $Folder)) {
+    New-Item -ItemType Directory -Path $Folder -Force | Out-Null
+  }
   Set-Content -Path $path -Value $content
 }
 
