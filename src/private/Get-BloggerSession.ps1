@@ -12,6 +12,7 @@ Function Get-BloggerSession
       PandocAdditionalArgs = "--html-q-tags --ascii"
       BlogId = $null
       ExcludeLabels = @()
+      AttachmentsDirectory = $null
     }
 
   if (Test-Path $session.UserPreferences)

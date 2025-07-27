@@ -249,6 +249,17 @@ postId: "123456"
 
     BeforeEach {
       InModuleScope "PSBlogger" {
+        Mock Publish-BloggerPost { @{ id = "1234"} }
+      }
+      
+      New-TestImage "TestDrive:\image.png"
+      $script:testFile = "TestDrive:\testfile.md"
+      Set-MarkdownFile $script:testFile  "# hello world$([Environment]::NewLine)Your image ![image](image.png)"
+    }
+
+    It "Should upload images and update markdown in place" {
+      # arrange
+      InModuleScope "PSBlogger" {
 
         Mock Add-GoogleDriveFile -Verifiable {
           return @{
@@ -257,27 +268,62 @@ postId: "123456"
           }
         }
         Mock Set-GoogleDriveFilePermission -Verifiable {}
-
-        Mock Publish-BloggerPost { @{ id = "1234"} }
       }
-    }
-
-    It "Should upload images and update markdown in place" {
-      # arrange
-      $testFile = "TestDrive:\testfile.md"
-      $imagePath = "TestDrive:\image.png"
-      Set-Content -Path $testFile -Value "# hello world$([Environment]::NewLine)Your image ![image](image.png)"
-      Set-Content -Path $imagePath -Value "dummy image content"
 
       # act
-      $actualFile = Resolve-Path $testFile
+      $actualFile = Resolve-Path $script:testFile
       Publish-MarkdownBloggerPost -File $actualFile -BlogId 1234
 
       # assert
       Should -InvokeVerifiable
-      $updatedContent = Get-Content -Path $testFile -Raw
+      $updatedContent = Get-Content -Path $script:testFile -Raw
       $escapedRegex = [regex]::Escape("![image](https://drive.google.com/12345)")
       $updatedContent | Should -Match $escapedRegex
+    }
+
+    It "Should upload images from supplied attachments directory" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Publish-MarkdownDriveImages -ParameterFilter { $AttachmentsDirectory -eq "TestDrive:\attachments" } {
+          return @()
+        } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $script:testFile -BlogId 1234 -AttachmentsDirectory "TestDrive:\attachments"
+    
+      # assert
+      Should -InvokeVerifiable
+    }
+
+    It "Should upload images from default attachments directory if not specified" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Publish-MarkdownDriveImages -ParameterFilter { $AttachmentsDirectory -eq "" } {
+          return @()
+        } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $validFile -BlogId 1234
+    
+      # assert
+      Should -InvokeVerifiable
+    }
+
+    It "Should overwrite existing images in google drive if Force is specified" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Publish-MarkdownDriveImages -ParameterFilter { $Force -eq $true } {
+          return @()
+        } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $script:testFile -BlogId 1234 -Force
+
+      # assert
+      Should -InvokeVerifiable
     }
 
   }

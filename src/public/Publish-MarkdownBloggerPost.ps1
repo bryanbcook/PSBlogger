@@ -63,6 +63,9 @@ Function Publish-MarkdownBloggerPost
     [array]$ExcludeLabels = @(),
 
     [Parameter(Mandatory=$false)]
+    [string]$AttachmentsDirectory,
+
+    [Parameter(Mandatory=$false)]
     [switch]$Force,
 
     [Parameter(Mandatory=$false)]
@@ -86,7 +89,7 @@ Function Publish-MarkdownBloggerPost
   $postInfo = Get-MarkdownFrontMatter -File $File
 
   # Process images: detect, upload to Google Drive, and update markdown
-  $imageMappings = Publish-MarkdownDriveImages -File $File -Force:$Force
+  $imageMappings = Publish-MarkdownDriveImages -File $File -AttachmentsDirectory $AttachmentsDirectory -Force:$Force
   
   # convert from markdown to html file
   $content = ConvertTo-HtmlFromMarkdown -File $File

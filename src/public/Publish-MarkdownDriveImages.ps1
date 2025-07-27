@@ -9,6 +9,10 @@
 .PARAMETER File
   The path to the markdown file containing image references.
 
+.PARAMETER AttachmentsDirectory
+  Optional. The directory where images are stored. If not specified, the function will look for
+  images in the same directory as the markdown file.
+
 .PARAMETER Force
   If specified, will overwrite existing files in Google Drive with the same name.
 
@@ -27,12 +31,15 @@ Function Publish-MarkdownDriveImages
     [string]$File,
 
     [Parameter(Mandatory=$false)]
+    [string]$AttachmentsDirectory,
+
+    [Parameter(Mandatory=$false)]
     [switch]$Force
   )
 
   # Process images: detect, upload to Google Drive, and update markdown
   $imageMappings = @()
-  $images = Find-MarkdownImages -File $File
+  $images = Find-MarkdownImages -File $File -AttachmentsDirectory $AttachmentsDirectory
   
   if ($images -and $images.Count -gt 0) {
     Write-Verbose "Found $($images.Count) local images to upload to Google Drive"

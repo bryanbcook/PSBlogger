@@ -4,15 +4,8 @@ Describe "Publish-MarkdownDriveImages" {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
 
     # Create test images in TestDrive
-    $testImage1 = "TestDrive:\test-image1.png"
-    $testImage2 = "TestDrive:\subfolder\test-image2.jpg"
-    
-    # Create directory structure
-    New-Item -Path "TestDrive:\subfolder" -ItemType Directory -Force
-    
-    # Create dummy image files
-    Set-Content -Path $testImage1 -Value "fake png content"
-    Set-Content -Path $testImage2 -Value "fake jpg content"
+    $testImage1 = New-TestImage "TestDrive:\test-image1.png"
+    $testImage2 = New-TestImage "TestDrive:\subfolder\test-image2.jpg"
 
     $fileWithSingleImage = "TestDrive:\single-image.md"
     $fileWithSingleImageMarkdown = @(
@@ -20,7 +13,7 @@ Describe "Publish-MarkdownDriveImages" {
       "",
       "![Test Image](test-image1.png)"
     ) -join "`n"
-    Set-Content -Path $fileWithSingleImage -Value $fileWithSingleImageMarkdown
+    Set-MarkdownFile $fileWithSingleImage $fileWithSingleImageMarkdown
 
     # Prevent actual API calls during tests
     InModuleScope PSBlogger {
@@ -481,6 +474,39 @@ Describe "Publish-MarkdownDriveImages" {
       # Both images should be processed (upload succeeded), even if permission fails
       # The function continues processing and adds images to result even on permission failure
       $script:result.Count | Should -Be 2
+    }
+  }
+
+  Context "Attachments Directory" {
+
+    It "Should find images in specified attachments directory" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Find-MarkdownImages -ParameterFilter { $AttachmentsDirectory -eq "TestDrive:\attachments" } {
+          return @()
+        } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownDriveImages -File $fileWithSingleImage -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      Should -InvokeVerifiable
+    }
+
+    It "Should allow no attachments directory to be specified and use default behavior" {
+      # arrange
+      InModuleScope PSBlogger {
+        Mock Find-MarkdownImages -ParameterFilter { $AttachmentsDirectory -eq ""} {
+          return @()
+        } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownDriveImages -File $fileWithSingleImage
+
+      # assert
+      Should -InvokeVerifiable
     }
   }
 }

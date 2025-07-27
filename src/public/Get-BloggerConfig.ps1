@@ -12,5 +12,6 @@ Function Get-BloggerConfig
     PandocAdditionalArgs = $BloggerSession.PandocAdditionalArgs
     BlogId = $BloggerSession.BlogId
     ExcludeLabels = $BloggerSession.ExcludeLabels
+    AttachmentsDirectory = $BloggerSession.AttachmentsDirectory
   }
 }

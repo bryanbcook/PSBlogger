@@ -4,17 +4,9 @@ Describe "Find-MarkdownImages" {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
 
     # Create test images in TestDrive
-    $testImage1 = "TestDrive:\test-image1.png"
-    $testImage2 = "TestDrive:\subfolder\test-image2.jpg"
-    $testImage3 = "TestDrive:\absolute-image.gif"
-    
-    # Create directory structure
-    New-Item -Path "TestDrive:\subfolder" -ItemType Directory -Force
-    
-    # Create dummy image files
-    Set-Content -Path $testImage1 -Value "fake png content"
-    Set-Content -Path $testImage2 -Value "fake jpg content"
-    Set-Content -Path $testImage3 -Value "fake gif content"
+    New-TestImage "TestDrive:\test-image1.png"
+    New-TestImage "TestDrive:\subfolder\test-image2.jpg"
+    New-TestImage "TestDrive:\absolute-image.gif"
   }
 
   Context "Basic image detection" {
@@ -34,19 +26,20 @@ Describe "Find-MarkdownImages" {
     }
 
     It "Should find images with alt text only" {
+      # arrange
       $markdownFile = "TestDrive:\basic.md"
-      $markdownContent = @"
-# Test Post
-
-Here's an image:
-![Alt text](test-image1.png)
-
-More content here.
-"@
+      $markdownContent = @(
+        "# Test Post"
+        ""
+        "Here's an image:"
+        "![Alt text](test-image1.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].AltText | Should -Be "Alt text"
       $result[0].FileName | Should -Be "test-image1.png"
@@ -56,16 +49,21 @@ More content here.
     }
 
     It "Should find images with alt text and title" {
+      # arrange
       $markdownFile = "TestDrive:\with-title.md"
-      $markdownContent = @"
-# Test Post
+      $markdownContent = @(
+        "# Test Post"
+        ""
+        "Here's a screenshot:"
+        '![Screenshot](test-image1.png "Application Screenshot")'
+      ) -join [Environment]::NewLine
 
-![Screenshot](test-image1.png "Application Screenshot")
-"@
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].AltText | Should -Be "Screenshot"
       $result[0].Title | Should -Be "Application Screenshot"
@@ -73,23 +71,26 @@ More content here.
     }
 
     It "Should find multiple images in the same file" {
+      # arrange
       $markdownFile = "TestDrive:\multiple.md"
-      $markdownContent = @"
-# Test Post
-
-First image:
-![Image 1](test-image1.png)
-
-Second image:
-![Image 2](subfolder/test-image2.jpg "Second image title")
-
-Third image:
-![Image 3](test-image1.png "Reused image")
-"@
+      $markdownContent = @(
+        "# Test Post"
+        ""
+        "First image:"
+        "![Image 1](test-image1.png)"
+        ""
+        "Second image:"
+        "![Image 2](subfolder/test-image2.jpg `"Second image title`")"
+        ""
+        "Third image (reused):"
+        "![Image 3](test-image1.png `"Reused image`")"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 3
       $result[0].FileName | Should -Be "test-image1.png"
       $result[1].FileName | Should -Be "test-image2.jpg"
@@ -98,16 +99,20 @@ Third image:
     }
   }
 
-  Context "Path resolution" {
+  Context "Image Path resolution" {
     It "Should resolve relative paths correctly" {
+      # arrange
       $markdownFile = "TestDrive:\relative.md"
-      $markdownContent = @"
-![Relative image](./subfolder/test-image2.jpg)
-"@
+      $markdownContent = @(
+        ""
+        "![Relative image](./subfolder/test-image2.jpg)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-image2.jpg"
       $result[0].RelativePath | Should -Be "./subfolder/test-image2.jpg"
@@ -115,79 +120,203 @@ Third image:
     }
 
     It "Should handle absolute paths" {
+      # arrange
       $markdownFile = "TestDrive:\absolute.md"
       $absolutePath = (Get-Item "TestDrive:\absolute-image.gif").FullName
-      $markdownContent = @"
-![Absolute image]($absolutePath)
-"@
+      $markdownContent = @(
+        ""
+        "![Absolute image]($absolutePath)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "absolute-image.gif"
       $result[0].LocalPath | Should -Be $absolutePath
     }
 
     It "Should handle parent directory references" {
+      # arrange
       # Create a markdown file in a subdirectory
       $subDir = "TestDrive:\subdir"
       New-Item -Path $subDir -ItemType Directory -Force
       $markdownFile = "$subDir\parent-ref.md"
-      $markdownContent = @"
-![Parent image](../test-image1.png)
-"@
+      $markdownContent = @(
+        ""
+        "![Parent image](../test-image1.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-image1.png"
       $result[0].RelativePath | Should -Be "../test-image1.png"
     }
   }
 
-  Context "Filtering and validation" {
-    It "Should skip images that are already web hosted (HTTP/HTTPS)" {
-      $markdownFile = "TestDrive:\with-urls.md"
-      $markdownContent = @"
-![Local image](test-image1.png)
-![HTTP image](http://example.com/image.jpg)
-![HTTPS image](https://example.com/image.png)
-"@
+  Context "Path resolution with attachments directory" {
+    BeforeEach{
+      # create images in the attachments directory
+      New-TestImage "TestDrive:\attachments\test-attachment1.png"
+      New-TestImage "TestDrive:\attachments\subfolder\test-attachment2.jpg"
+    }
+
+    It "Should resolve absolute image in the attachments directory" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments.md"
+      $markdownContent = @(
+        ""
+        "![Image in attachments](test-attachment1.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
+
+    It "Should resolve absolute image with subfolder relative to the attachments directory" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownContent = @(
+        ""
+        "![Image in subfolder](subfolder/test-attachment2.jpg)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
+    }
+
+    It "Should find images in subfolders of the attachments directory when markdown does not specify a subfolder" {
+      # arrange
+      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownContent = @(
+        ""
+        "![Image in subfolder](test-attachment2.jpg)" # this is in the subfolder
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile -AttachmentsDirectory "TestDrive:\attachments"
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
+    }
+
+    It "Should use folder of file if attachments directory is not specified" {
+      # arrange
+      $markdownFile = "TestDrive:\relative-path.md"
+      $markdownContent = @(
+        ""
+        "![Image with relative path](test-attachment1.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
+
+    It "Should use attachments directory user preference if available" {
+      # arrange
+      InModuleScope PSBlogger {
+        $BloggerSession.AttachmentsDirectory = "TestDrive:\attachments"
+      }
+
+      # use a markdown file that is a sibling to attachments directory to ensure
+      # attachments are not in a subfolder of the markdown file
+      $markdownFile = "TestDrive:\subfolder\attachments-preference.md"
+      $markdownContent = @(
+        ""
+        "![Image in attachments directory](test-attachment1.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
+  }
+
+  Context "Filtering and validation" {
+    It "Should skip images that are already web hosted (HTTP/HTTPS)" {
+      # arrange
+      $markdownFile = "TestDrive:\with-urls.md"
+      $markdownContent = @(
+        ""
+        "![Local image](test-image1.png)"
+        "![HTTP image](http://example.com/image.jpg)"
+        "![HTTPS image](https://example.com/image.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-image1.png"
     }
 
     It "Should skip non-existent files" {
+      # arrange
       $markdownFile = "TestDrive:\missing-files.md"
-      $markdownContent = @"
-![Existing image](test-image1.png)
-![Missing image](does-not-exist.jpg)
-![Another existing](subfolder/test-image2.jpg)
-"@
+      $markdownContent = @(
+        ""
+        "![Existing image](test-image1.png)"
+        "![Missing image](does-not-exist.jpg)"
+        "![Another existing](subfolder/test-image2.jpg)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 2
       $result[0].FileName | Should -Be "test-image1.png"
       $result[1].FileName | Should -Be "test-image2.jpg"
     }
 
     It "Should handle empty alt text" {
+      # arrange
       $markdownFile = "TestDrive:\empty-alt.md"
-      $markdownContent = @"
-![](test-image1.png)
-"@
+      $markdownContent = @(
+        ""
+        "![](test-image1.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].AltText | Should -Be ""
       $result[0].FileName | Should -Be "test-image1.png"
@@ -196,66 +325,74 @@ Third image:
 
   Context "Edge cases and special characters" {
     It "Should handle images with spaces in filenames" {
+      # arrange
       $imageWithSpaces = "TestDrive:\image with spaces.png"
       Set-Content -Path $imageWithSpaces -Value "fake content"
       
       $markdownFile = "TestDrive:\spaces.md"
-      $markdownContent = @"
-![Image with spaces](image with spaces.png)
-"@
+      $markdownContent = @(
+        ""
+        "![Image with spaces](image with spaces.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "image with spaces.png"
     }
 
     It "Should handle special characters in alt text" {
+      # arrange
       $markdownFile = "TestDrive:\special-chars.md"
-      $markdownContent = @"
-![Alt with "quotes" and 'apostrophes'](test-image1.png)
-"@
+      $markdownContent = @(
+        ""
+        "![Alt with `"quotes`" and 'apostrophes'](test-image1.png)"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].AltText | Should -Be "Alt with `"quotes`" and 'apostrophes'"
     }
 
     It "Should handle markdown files with no images" {
+      # arrange
       $markdownFile = "TestDrive:\no-images.md"
-      $markdownContent = @"
-# Test Post
-
-This is just text content.
-
-Some more paragraphs.
-
-- List item 1
-- List item 2
-
-No images here!
-"@
+      $markdownContent = @(
+        "# Test Post"
+        ""
+        "This markdown file has no images."
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 0
     }
   }
 
   Context "Return object structure" {
     It "Should return objects with all expected properties" {
+      # arrange
       $markdownFile = "TestDrive:\properties.md"
-      $markdownContent = @"
-![Test Alt](test-image1.png "Test Title")
-"@
+      $markdownContent = @(
+        ""
+        "![Test Alt](test-image1.png `"Test Title`")"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $image = $result[0]
       
@@ -315,13 +452,13 @@ No images here!
         },
         @{
           Name = "Multiple Obsidian images"
-          Content = @"
-![[test-image1.png|First image]]
-Some text here
-![[subfolder/test-image2.jpg]]
-More text
-![[test-image1.png|Duplicate image]]
-"@
+          Content = @(
+            "![[test-image1.png|First image]]",
+            "Some text here",
+            "![[subfolder/test-image2.jpg]]",
+            "More text",
+            "![[test-image1.png|Duplicate image]]"
+          ) -join [Environment]::NewLine
           ExpectedCount = 3
           ExpectedAltText = @("First image", "", "Duplicate image")
           ExpectedFileName = @("test-image1.png", "test-image2.jpg", "test-image1.png")
@@ -331,12 +468,14 @@ More text
 
     It "Should handle <Name>" -TestCases $obsidianTestCases {
       param($Name, $Content, $ExpectedCount, $ExpectedAltText, $ExpectedFileName, $ExpectedOriginal)
-      
+      # arrange
       $markdownFile = "TestDrive:\obsidian-test.md"
       Set-MarkdownFile $markdownFile $Content
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be $ExpectedCount
       
       if ($ExpectedCount -eq 1) {
@@ -357,31 +496,37 @@ More text
     }
 
     It "Should skip Obsidian images with HTTP URLs" {
+      # arrange
       $markdownFile = "TestDrive:\obsidian-urls.md"
-      $markdownContent = @"
-![[test-image1.png|Local image]]
-![[http://example.com/image.jpg|HTTP image]]
-![[https://example.com/image.png|HTTPS image]]
-"@
+      $markdownContent = @(
+        "![[test-image1.png|Local image]]",
+        "![[http://example.com/image.jpg|HTTP image]]",
+        "![[https://example.com/image.png|HTTPS image]]"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-image1.png"
     }
 
     It "Should skip non-existent Obsidian images" {
+      # arrange
       $markdownFile = "TestDrive:\obsidian-missing.md"
-      $markdownContent = @"
-![[test-image1.png|Existing image]]
-![[does-not-exist.jpg|Missing image]]
-![[subfolder/test-image2.jpg|Another existing]]
-"@
+      $markdownContent = @(
+        "![[test-image1.png|Existing image]]",
+        "![[does-not-exist.jpg|Missing image]]",
+        "![[subfolder/test-image2.jpg|Another existing]]"
+      ) -join [Environment]::NewLine
       Set-MarkdownFile $markdownFile $markdownContent
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be 2
       $result[0].FileName | Should -Be "test-image1.png"
       $result[1].FileName | Should -Be "test-image2.jpg"
@@ -407,32 +552,41 @@ More text
       $mixedFormatTestCases = @(
         @{
           Name = "Both standard and Obsidian in same file"
-          Content = @"
-![Standard image](test-image1.png "Standard title")
-![[test-image1.png|Obsidian image]]
-![Another standard](subfolder/test-image2.jpg)
-![[subfolder/test-image2.jpg]]
-"@
+          Content = @(
+            "# Mixed Format Test",
+            "",
+            "Here are some images:",
+            "![Standard image](test-image1.png `"Standard title`")",
+            "![[test-image1.png|Obsidian image]]",
+            "![Another standard](subfolder/test-image2.jpg)",
+            "![[subfolder/test-image2.jpg]]"
+          ) -join [Environment]::NewLine
           ExpectedCount = 4
           ExpectedAltTexts = @("Standard image", "Obsidian image", "Another standard", "")
           ExpectedTitles = @("Standard title", "", "", "")
         },
         @{
           Name = "Standard format only"
-          Content = @"
-![Image 1](test-image1.png)
-![Image 2](subfolder/test-image2.jpg "With title")
-"@
+          Content = @(
+            "# Standard Format Test",
+            "",
+            "Here are some images:",
+            "![Image 1](test-image1.png)",
+            "![Image 2](subfolder/test-image2.jpg `"With title`")"
+          ) -join [Environment]::NewLine
           ExpectedCount = 2
           ExpectedAltTexts = @("Image 1", "Image 2")
           ExpectedTitles = @("", "With title")
         },
         @{
           Name = "Obsidian format only"
-          Content = @"
-![[test-image1.png|Alt 1]]
-![[subfolder/test-image2.jpg]]
-"@
+          Content = @(
+            "# Obsidian Format Test",
+            "",
+            "Here are some images:",
+            "![[test-image1.png|Alt 1]]",
+            "![[subfolder/test-image2.jpg]]"
+          ) -join [Environment]::NewLine
           ExpectedCount = 2
           ExpectedAltTexts = @("Alt 1", "")
           ExpectedTitles = @("", "")
@@ -442,12 +596,14 @@ More text
 
     It "Should handle <Name>" -TestCases $mixedFormatTestCases {
       param($Name, $Content, $ExpectedCount, $ExpectedAltTexts, $ExpectedTitles)
-      
+      # arrange
       $markdownFile = "TestDrive:\mixed-format-test.md"
       Set-MarkdownFile $markdownFile $Content
 
+      # act
       $result = Find-MarkdownImages -File $markdownFile
 
+      # assert
       $result.Count | Should -Be $ExpectedCount
       
       for ($i = 0; $i -lt $ExpectedCount; $i++) {
