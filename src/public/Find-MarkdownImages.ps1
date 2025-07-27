@@ -43,8 +43,14 @@ function Find-MarkdownImages {
   }
 
   if ([string]::IsNullOrEmpty($AttachmentsDirectory)) {
-    # If no attachments directory is specified, use the file's directory
-    $AttachmentsDirectory = $fileDirectory
+    if ($BloggerSession.AttachmentsDirectory) {
+      # Use the Blogger session's attachments directory if available
+      Write-Verbose "Using PSBlogger config for attachments directory: $($BloggerSession.AttachmentsDirectory)"
+      $AttachmentsDirectory = $BloggerSession.AttachmentsDirectory
+    } else {
+      # Default to the file's directory if no attachments directory is specified
+      $AttachmentsDirectory = $fileDirectory
+    }
   }
 
   # Regex pattern for standard markdown images: ![alt text](image_path "optional title")

@@ -220,6 +220,48 @@ Describe "Find-MarkdownImages" {
       $result[0].FileName | Should -Be "test-attachment2.jpg"
       $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
     }
+
+    It "Should use folder of file if attachments directory is not specified" {
+      # arrange
+      $markdownFile = "TestDrive:\relative-path.md"
+      $markdownContent = @(
+        ""
+        "![Image with relative path](test-attachment1.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
+
+    It "Should use attachments directory user preference if available" {
+      # arrange
+      InModuleScope PSBlogger {
+        $BloggerSession.AttachmentsDirectory = "TestDrive:\attachments"
+      }
+
+      # use a markdown file that is a sibling to attachments directory to ensure
+      # attachments are not in a subfolder of the markdown file
+      $markdownFile = "TestDrive:\subfolder\attachments-preference.md"
+      $markdownContent = @(
+        ""
+        "![Image in attachments directory](test-attachment1.png)"
+      ) -join [Environment]::NewLine
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Find-MarkdownImages -File $markdownFile
+
+      # assert
+      $result.Count | Should -Be 1
+      $result[0].FileName | Should -Be "test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+    }
   }
 
   Context "Filtering and validation" {
