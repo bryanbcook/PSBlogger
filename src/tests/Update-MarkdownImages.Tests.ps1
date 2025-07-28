@@ -23,12 +23,11 @@ Describe "Update-MarkdownImages" {
       $expectedRegex = [regex]::Escape($expected)
 
       # create test file
-      @(
-        "# First Post"
-        ""
-        "Some content with an $original image"
-      ) -join [System.Environment]::NewLine | 
-      Set-Content -Path "TestDrive:\test.md"
+      Set-MarkdownFile "TestDrive:\test.md" @(
+          "# First Post"
+          ""
+          "Some content with an $original image"
+        ) -join [System.Environment]::NewLine
 
       # act
       Update-MarkdownImages -File "TestDrive:\test.md" -ImageMappings $imagesMappings
@@ -46,7 +45,7 @@ Describe "Update-MarkdownImages" {
         ""
         "Some content with an ![image](/path/image.png)"
       ) -join [System.Environment]::NewLine
-      $inputContent | Set-Content -Path $inputFile
+      Set-MarkdownFile $inputFile $inputContent
       
       $imagesMappings = @(
         New-MarkdownImage `
@@ -62,6 +61,20 @@ Describe "Update-MarkdownImages" {
       $outputContent = Get-Content -Path $outputFile -Raw
       $outputContent | Should -Not -BeNullOrEmpty
       $outputContent | Should -Not -Be $inputContent
+    }
+
+    It "Should write changes to the OutFile even if images weren't updated" {
+      # arrange
+      $inputFile = "TestDrive:\test.md"
+      $outputFile = "TestDrive:\output.md"
+      Set-MarkdownFile $inputFile "dummy content without images"
+      $imagesMappings = @()
+
+      # act
+      Update-MarkdownImages -File $inputFile -ImageMappings $imagesMappings -OutFile $outputFile
+
+      # assert
+      Test-Path $outputFile | Should -Be $true
     }
 
   }

@@ -36,6 +36,7 @@ function Update-MarkdownImages {
     [string]$File,
         
     [Parameter(Mandatory = $true)]
+    [AllowEmptyCollection()]
     [array]$ImageMappings,
 
     [Parameter()]
@@ -71,11 +72,11 @@ function Update-MarkdownImages {
     $TargetFile = $OutFile
   }
 
-  # Only write the file if content has changed
-  if ($content -ne $originalContent) {
+  # Only write the file if content has changed or if OutFile is specified
+  if ($content -ne $originalContent -or $OutFile) {
     Set-Content -Path $TargetFile -Value $content -NoNewline
     Write-Verbose "Updated markdown file: $TargetFile"
-    return $true
+    return ($content -ne $originalContent)
   }
   else {
     Write-Verbose "No changes made to markdown file: $File"
