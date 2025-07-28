@@ -14,7 +14,6 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
    choco install pandoc
    ```
 
-   (Future: still need to publish to PowerShell nuget library)
    ```
    Install-Module PSBlogger
    ```
