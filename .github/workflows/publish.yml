@@ -1,5 +1,8 @@
 name: PowerShell Gallery Publishing
 
+permissions:
+  contents: write
+
 on:
   # Automatic trigger: when module version changes on main branch
   push:
