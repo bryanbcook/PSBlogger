@@ -186,6 +186,18 @@ jobs:
         if ($testResults.FailedCount -gt 0) {
           throw "Tests failed. Cannot publish to PowerShell Gallery."
         }
+
+    - name: Inject Values into Module
+      shell: pwsh
+      env:
+        CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      run: |
+        $file = "./src/public/Initialize-Blogger.ps1"
+        $content = Get-Content $file -Raw
+        $content = $content -replace "<<CLIENT_ID>>", $env:CLIENT_ID
+        $content = $content -replace "<<CLIENT_SECRET>>", $env:CLIENT_SECRET
+        $content | Set-Content -Path $file -Force
     
     - name: Publish to PowerShell Gallery
       shell: pwsh
