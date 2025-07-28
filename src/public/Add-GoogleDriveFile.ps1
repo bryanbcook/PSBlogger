@@ -30,7 +30,7 @@ function Add-GoogleDriveFile {
     [string]$FileName,
 
     [Parameter()]
-    [string]$TargetFolderName = "Open Live Writer",
+    [string]$TargetFolderName = "PSBlogger",
 
     [Parameter()]
     [switch]$Force

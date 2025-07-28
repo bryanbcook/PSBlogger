@@ -25,10 +25,10 @@ Initiate a login flow with Google
 Function Initialize-Blogger {
   Param(
     [Parameter(HelpMessage = "Google API ClientId")]
-    [string]$clientId = "284606892422-ribvo7oodlbtd70e8onn8rg4hm58mluj.apps.googleusercontent.com",
+    [string]$clientId = "<<CLIENT_ID>>",
 
     [Parameter(HelpMessage = "Google API Client Secret")]
-    [string]$clientSecret = "PUK0j9ig-GHcSByQao2i1aIa",
+    [string]$clientSecret = "<<CLIENT_SECRET>>",
 
     [Parameter(HelpMessage = "Redirect Uri specified in Google API Consent Form")]
     [string]$redirectUri = "http://localhost/oauth2callback"
@@ -41,8 +41,7 @@ Function Initialize-Blogger {
   # specify the scopes we want in our auth token
   $scope = @(
     "https://www.googleapis.com/auth/blogger" 
-    #"https://www.googleapis.com/auth/drive.file" # TODO: fix
-    "https://www.googleapis.com/auth/drive"
+    "https://www.googleapis.com/auth/drive.file"
 
   ) -join " "
 
