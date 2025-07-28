@@ -327,4 +327,136 @@ postId: "123456"
     }
 
   }
+
+  Context "PreserveOriginal Parameter" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        $script:capturedTempFile = $null
+
+        # Simulate the behavior of Publish-MarkdownDriveImages with our temporary file
+        # and capture the tempoary file name
+        Mock Publish-MarkdownDriveImages -ParameterFilter {
+          $OutFile -ne $null -and $OutFile -ne "TestDrive:\validfile.md"
+        } { 
+          $script:capturedTempFile = $OutFile
+          # simulate creating the OutFile
+          New-Item -Path $OutFile -ItemType File -Force | Out-Null
+          return @()
+        } -Verifiable
+
+        # ensure temporary file is converted to html
+        Mock ConvertTo-HtmlFromMarkdown -ParameterFilter { $File -ne "TestDrive:\validfile.md" } {
+          return "dummy"
+        } -Verifiable
+      }
+    }
+
+    It "Should not modify original file when PreserveOriginal is specified" {
+      # arrange
+      InModuleScope PSBlogger {
+
+        # front matter should be modified on the original file
+        Mock Set-MarkdownFrontMatter -ParameterFilter { $File -like "*validfile.md"} -Verifiable
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $validFile -BlogId 1234 -PreserveOriginal
+
+      # assert
+      Should -InvokeVerifiable
+    }
+
+    It "Should create and clean up temporary file when PreserveOriginal is used" {
+      # arrange
+
+      # act
+      Publish-MarkdownBloggerPost -File $validFile -BlogId 1234 -PreserveOriginal
+
+      # assert
+      InModuleScope PSBlogger {
+        $script:capturedTempFile | Should -Not -BeNullOrEmpty
+        $script:capturedTempFile | Should -Match "tmp.*\.md$"
+        Test-Path $script:capturedTempFile | Should -Be $false  # Should be cleaned up
+      }
+    }
+
+    It "Should clean up temporary file even when conversion fails" {
+      # arrange
+      InModuleScope PSBlogger {
+        # override existing mock to simulate conversion failure
+        Mock ConvertTo-HtmlFromMarkdown -ParameterFilter { $File -ne "TestDrive:\validfile.md" } {
+          throw "Conversion failed"
+        }
+      }
+
+      # act & assert
+      { 
+        Publish-MarkdownBloggerPost -File $validFile -BlogId 1234 -PreserveOriginal 
+      } | Should -Throw "Conversion failed"
+      
+      # assert cleanup occurred
+      InModuleScope PSBlogger {
+        if ($script:capturedTempFile) {
+          Test-Path $script:capturedTempFile | Should -Be $false
+        }
+      }
+    }
+
+    It "Should update front matter in original file even with PreserveOriginal" {
+      # arrange
+
+      InModuleScope PSBlogger {
+        Mock Set-MarkdownFrontMatter -ParameterFilter { $Replace.postId -eq "123" } { } -Verifiable
+      }
+
+      # act
+      Publish-MarkdownBloggerPost -File $validFile -BlogId 1234 -PreserveOriginal
+
+      # assert
+      Should -InvokeVerifiable
+    }
+  }
+
+  Context "Image Resolution when using PreserveOriginal" {
+
+    It "Should locate images relative to the original file" {
+      # arrange
+      # setup a markdown file with an image that refers to a file relative to the markdown file
+      $imageFile = New-TestImage "TestDrive:\note\image.png"
+      $markdownFile = "TestDrive:\note\post.md"
+      $markdownContent = @(
+        "# Test Post"
+        ""
+        "Image reference: ![Image Relative to note](image.png)"
+      ) -join "`n"
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      InModuleScope PSBlogger {
+        # mock the image upload to google drive
+
+        Mock Add-GoogleDriveFile -Verifiable {
+          return @{
+            id = "12345"
+            PublicUrl = "https://drive.google.com/uc?export=view&id=12345"
+          }
+        }
+        Mock Set-GoogleDriveFilePermission {}
+
+        Mock Publish-BloggerPost {
+          # return the passed in content in the result
+          return @{ id = "123"; content = $Content}
+        }
+
+        # remove existing mock defined for ConvertTo-HtmlFromMarkdown
+        Remove-Alias ConvertTo-HtmlFromMarkdown
+      }
+
+      # act
+      $result = Publish-MarkdownBloggerPost -File $markdownFile -BlogId 1234 -PreserveOriginal
+
+      # assert
+      $result.content | Should -BeLike "*https://drive.google.com*"
+    }
+  }
 }
