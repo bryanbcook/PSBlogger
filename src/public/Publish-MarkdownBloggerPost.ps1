@@ -22,6 +22,10 @@
 .PARAMETER Force
   If specified, will overwrite existing images in Google Drive with the same name.
 
+.PARAMETER PreserveOriginal
+  If specified, preserves the original markdown file with local image references. The file with Google Drive URLs 
+  is used only for HTML conversion and blog publishing.
+
 .PARAMETER Open
   If specified, launches a browser to view the post after publishing.
 
@@ -42,8 +46,12 @@
   Publish-MarkdownBloggerPost -File "my-post.md" -Open
 
 .EXAMPLE
-  # publish or update a draft, launching a web browser with the page preview
+  # publish or update a post, launching a web browser with the page preview
   Publish-MarkdownBloggerPost -File "my-post.md" -Draft -Open
+
+.EXAMPLE
+  # publish or update a post while preserving local image references in the original file
+  Publish-MarkdownBloggerPost -File "my-post.md" -PreserveOriginal
 #>
 Function Publish-MarkdownBloggerPost
 {
@@ -69,10 +77,14 @@ Function Publish-MarkdownBloggerPost
     [switch]$Force,
 
     [Parameter(Mandatory=$false)]
+    [switch]$PreserveOriginal,
+
+    [Parameter(Mandatory=$false)]
     [switch]$Open
 
   )
 
+  # Obtain -BlogId from User Preferences if available
   if (!$PSBoundParameters.ContainsKey("BlogId"))
   {
     $BlogId = $BloggerSession.BlogId
@@ -81,6 +93,7 @@ Function Publish-MarkdownBloggerPost
     }
   }
 
+  # Obtain -ExcludeLabesl from User Preferences if availabe
   if (!$PSBoundParameters.ContainsKey("ExcludeLabels")) {
     $ExcludeLabels = $BloggerSession.ExcludeLabels
   }
@@ -89,48 +102,72 @@ Function Publish-MarkdownBloggerPost
   $postInfo = Get-MarkdownFrontMatter -File $File
 
   # Process images: detect, upload to Google Drive, and update markdown
-  $imageMappings = Publish-MarkdownDriveImages -File $File -AttachmentsDirectory $AttachmentsDirectory -Force:$Force
+  $tempFile = $null
+  $fileForConversion = $File
   
-  # convert from markdown to html file
-  $content = ConvertTo-HtmlFromMarkdown -File $File
+  try {
+    if ($PreserveOriginal) {
+      # Create temporary file for modified content
+      $tempFile = [System.IO.Path]::GetTempFileName()
+      $tempFile = [System.IO.Path]::ChangeExtension($tempFile, ".md")
+      Write-Verbose "Using temporary file for image processing: $tempFile"
+            
+      # publishes markdown drive images to google drive and writes the output to the specified OutFile
+      $imageMappings = Publish-MarkdownDriveImages -File $File -AttachmentsDirectory $AttachmentsDirectory -Force:$Force -OutFile $tempFile
+      $fileForConversion = $tempFile
+    }
+    else {
+      $imageMappings = Publish-MarkdownDriveImages -File $File -AttachmentsDirectory $AttachmentsDirectory -Force:$Force
+    }
+    
+    # convert from markdown to html file
+    $content = ConvertTo-HtmlFromMarkdown -File $fileForConversion
 
-  # TODO: Extension point to apply corrections to HTML
-  # - eg: remove instances of <pre><code> from the content
+    # TODO: Extension point to apply corrections to HTML
+    # - eg: remove instances of <pre><code> from the content
 
-  # construct args
-  $postArgs = @{
-    BlogId = $BlogId
-    Title = $postInfo.title
-    Content = $content
-    Draft = $Draft
-    Open = $Open
+    # construct args
+    $postArgs = @{
+      BlogId = $BlogId
+      Title = $postInfo.title
+      Content = $content
+      Draft = $Draft
+      Open = $Open
+    }
+
+    if ($postInfo["postId"]) {
+      $postArgs.PostId = $postInfo.postid
+    }
+
+    if ($postInfo["tags"]) {
+      $postArgs.Labels = [array]$postInfo.tags | Where-Object { $_ -notin $ExcludeLabels }
+    }
+    
+    Write-Verbose "Publishing blogger post with args: $($postArgs | ConvertTo-Json -Depth 5)"
+    $post = Publish-BloggerPost @postArgs
+
+    # update post id
+    $postInfo["postId"] = $post.id
+    if ($Draft) {
+      Write-Verbose "Adding 'wip' to front matter"
+      $postInfo["wip"] = $true
+    } else {
+      if ($postInfo["wip"]) {
+        Write-Verbose "Removing 'wip' from front matter"
+        $postInfo.Remove("wip")
+      }
+    }
+
+    Write-Verbose "Updating front matter with post id: $($postInfo['postId'])"
+    Set-MarkdownFrontMatter -File $File -Replace $postInfo
+
+    return $post
   }
-
-  if ($postInfo["postId"]) {
-    $postArgs.PostId = $postInfo.postid
-  }
-
-  if ($postInfo["tags"]) {
-    $postArgs.Labels = [array]$postInfo.tags | Where-Object { $_ -notin $ExcludeLabels }
-  }
-  
-  Write-Verbose "Publishing blogger post with args: $($postArgs | ConvertTo-Json -Depth 5)"
-  $post = Publish-BloggerPost @postArgs
-
-  # update post id
-  $postInfo["postId"] = $post.id
-  if ($Draft) {
-    Write-Verbose "Adding 'wip' to front matter"
-    $postInfo["wip"] = $true
-  } else {
-    if ($postInfo["wip"]) {
-      Write-Verbose "Removing 'wip' from front matter"
-      $postInfo.Remove("wip")
+  finally {
+    # Clean up temporary file if it was created
+    if ($tempFile -and (Test-Path $tempFile)) {
+      Write-Verbose "Cleaning up temporary file: $tempFile"
+      Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
     }
   }
-
-  Write-Verbose "Updating front matter with post id: $($postInfo['postId'])"
-  Set-MarkdownFrontMatter -File $File -Replace $postInfo
-
-  return $post
 }

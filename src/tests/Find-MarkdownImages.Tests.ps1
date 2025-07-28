@@ -7,6 +7,11 @@ Describe "Find-MarkdownImages" {
     New-TestImage "TestDrive:\test-image1.png"
     New-TestImage "TestDrive:\subfolder\test-image2.jpg"
     New-TestImage "TestDrive:\absolute-image.gif"
+
+    InModuleScope PSBlogger {
+      # reset blogger session to ensure that user preferences are not carried over into test
+      $BloggerSession.AttachmentsDirectory = $null
+    }
   }
 
   Context "Basic image detection" {
