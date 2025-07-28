@@ -5,7 +5,7 @@
 RootModule = 'PSBlogger.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.2.0'
+ModuleVersion = '0.3.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -20,7 +20,7 @@ Author = 'Bryan Cook'
 CompanyName = 'Bryan Cook'
 
 # Copyright statement for this module
-Copyright = '#169; me'
+# Copyright = '#169; me'
 
 # Description of the functionality provided by this module
 Description = 'Module to publish markdown files to Blogger'
@@ -97,16 +97,16 @@ PrivateData = @{
         Tags = 'blogger','markdown','pandoc'
 
         # A URL to the license for this module.
-        #LicenseUri = ''
+        LicenseUri = 'https://github.com/bryanbcook/PSBlogger?tab=MIT-1-ov-file#readme'
 
         # A URL to the main website for this project.
-        ProjectUri = 'http://www.bryancook.net/'
+        ProjectUri = 'https://github.com/bryanbcook/PSBlogger'
 
         # A URL to an icon representing this module.
         #IconUri = ''
 
         # ReleaseNotes of this module
-        #ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/bryanbcook/PSBlogger/releases'
         # Prerelease string of this module
         # Prerelease = ''
 

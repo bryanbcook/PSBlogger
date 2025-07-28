@@ -53,10 +53,12 @@ function Get-GoogleDriveItems {
     $q += "'$ParentId' in parents"
   }
 
+  $q += "trashed=false"  # Exclude trashed items
+
   $queryArgs = @{
     q        = [System.Web.HttpUtility]::UrlEncode($q -join ' and ')
     pageSize = 40
-  }    
+  }
 
   do {
 
