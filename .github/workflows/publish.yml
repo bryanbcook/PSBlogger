@@ -286,45 +286,18 @@ jobs:
           Write-Host "Created and pushed tag v${{ steps.version.outputs.version }}"
         }
     
-    - name: Get Commit Messages for Release Notes
-      if: steps.run-mode.outputs.is-dry-run == 'false'
-      id: release-notes
-      shell: pwsh
-      run: |
-        # Get the previous tag
-        $previousTag = git describe --tags --abbrev=0 "v${{ steps.version.outputs.version }}~1" 2>$null
-        if ($LASTEXITCODE -ne 0) {
-          # If no previous tag, get last 10 commits
-          $commits = git log --oneline --pretty=format:"- %s (%h)" -n 10
-        } else {
-          # Get commits since the previous tag
-          $commits = git log --oneline --pretty=format:"- %s (%h)" "$previousTag..v${{ steps.version.outputs.version }}"
-        }
-        
-        $releaseNotes = @"
-        ## Changes in version ${{ steps.version.outputs.version }}
-        
-        $($commits -join "`n")
-        
-        ## Installation
-        ``````powershell
-        Install-Module -Name PSBlogger -RequiredVersion ${{ steps.version.outputs.version }}
-        ``````
-        "@
-        
-        # Escape for GitHub Actions
-        $releaseNotes = $releaseNotes -replace "`r`n", "`n" -replace "`n", "%0A"
-        echo "release-notes=$releaseNotes" >> $env:GITHUB_OUTPUT
-    
     - name: Create GitHub Release
       if: steps.run-mode.outputs.is-dry-run == 'false'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.version.outputs.version }}
-        release_name: Release v${{ steps.version.outputs.version }}
-        body: ${{ steps.release-notes.outputs.release-notes }}
+        name: Release v${{ steps.version.outputs.version }}
+        generate_release_notes: true
+        body: |
+          ## Installation
+          ```powershell
+          Install-Module -Name PSBlogger -RequiredVersion ${{ steps.version.outputs.version }}
+          ```
         draft: false
         prerelease: false
     
