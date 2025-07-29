@@ -5,7 +5,7 @@
 RootModule = 'PSBlogger.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.3.1'
+ModuleVersion = '0.3.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
