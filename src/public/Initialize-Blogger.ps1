@@ -36,6 +36,20 @@ Function Initialize-Blogger {
   )
 
   $ErrorActionPreference = 'Stop'
+  if ($env:PSBLOGGER_CLIENT_ID -and !$PSBoundParameters.ContainsKey("ClientId"))
+  {
+    Write-Verbose "Using environment variable PSBLOGGER_CLIENT_ID for ClientId"
+    $ClientId = $env:PSBLOGGER_CLIENT_ID
+  }
+  if ($env:PSBLOGGER_CLIENT_SECRET -and !$PSBoundParameters.ContainsKey("ClientSecret"))
+  {
+    Write-Verbose "Using environment variable PSBLOGGER_CLIENT_SECRET for ClientSecret"
+    $ClientSecret = $env:PSBLOGGER_CLIENT_SECRET
+  }
+  if ($ClientId -eq "<<CLIENT_ID>>" -or $ClientSecret -eq "<<CLIENT_SECRET>>") {
+    Write-Error "See contribution guide for how to set up your own Google API for local development."
+    return
+  }
 
   Write-Information "Let's get an auth-code."
 
