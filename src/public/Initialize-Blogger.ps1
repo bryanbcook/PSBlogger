@@ -21,6 +21,8 @@ Initiate a login flow with Google
 
   Initialize-Blogger
 
+.NOTES
+  Note that this function requires administrator permissions to support the authentication flow.
 #>
 Function Initialize-Blogger {
   [CmdletBinding()]
@@ -34,8 +36,17 @@ Function Initialize-Blogger {
     [Parameter(HelpMessage = "Redirect Uri specified in Google API Consent Form")]
     [string]$RedirectUri = "http://localhost/oauth2callback"
   )
+  
+  # Check that we're running as an admin
+  if (-not (Test-IsAdmin)) {
+    Write-Warning "Administrator privileges are required to initialize Blogger authentication."
+    Write-Warning "Please restart PowerShell as Administrator and try again."
+    return
+  }
 
   $ErrorActionPreference = 'Stop'
+
+  # Show warning to developers if they attempt to use the neutered credentials by mistake
   if ($env:PSBLOGGER_CLIENT_ID -and !$PSBoundParameters.ContainsKey("ClientId"))
   {
     Write-Verbose "Using environment variable PSBLOGGER_CLIENT_ID for ClientId"
