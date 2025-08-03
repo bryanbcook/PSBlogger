@@ -32,10 +32,13 @@ Describe "Initialize-Blogger" {
         # arrange
         $credentialCache = "TestDrive:\credentialcache.json"
         $BloggerSession.CredentialCache = $credentialCache
-
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+        }
 
         # act
-        Initialize-Blogger
+        Initialize-Blogger @initArgs
         
         # assert
         $credentials = Get-Content -Path $credentialCache | ConvertFrom-Json
@@ -53,9 +56,14 @@ Describe "Initialize-Blogger" {
         $BloggerSession.AccessToken = "invalid"
         $BloggerSession.RefreshToken = "invalid"
 
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+        }
+
         # act
-        Initialize-Blogger
-        
+        Initialize-Blogger @initArgs
+
         # assert
         $BloggerSession.AccessToken | Should -Be $null
         $BloggerSession.RefreshToken | Should -Be $null
