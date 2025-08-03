@@ -4,16 +4,13 @@ Describe "Initialize-Blogger" {
     Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
   }
 
-  # Context "Try it" {
-  #   It "Should launch browser and authenticate" {
-  #     Initialize-Blogger
-  #   }
-  # }
-
   Context "User provides AuthCode" {
 
     BeforeEach {
       InModuleScope -ModuleName PSBlogger {
+        # simulate running as admin
+        Mock Test-IsAdmin { $true }
+
         # simulate valid auth token
         Mock Get-GoogleAccessToken { return @{ refresh_token = "refresh_token" } }
         # simulate valid offline token
@@ -72,4 +69,30 @@ Describe "Initialize-Blogger" {
 
   }
 
+  Context "Running as non-admin" {
+    BeforeEach {
+      InModuleScope -ModuleName PSBlogger {
+        # simulate running as non-admin
+        Mock Test-IsAdmin { $false }
+
+        # ensure that we don't launch browser or admin features
+        Mock Start-Process { throw "Unexpected call to start-process"}
+      }
+    }
+
+    It "Should show warning and exit when not admin" {
+      InModuleScope -ModuleName PSBlogger {
+        # arrange
+        $initArgs = @{ ClientId="dummy"; ClientSecret="dummy" }
+        Mock Write-Warning {} -Verifiable
+
+        # act & assert
+        { Initialize-Blogger @initArgs } | Should -Not -Throw
+        
+        # The function should exit early, so we can verify it doesn't try to do auth
+        Assert-MockCalled Test-IsAdmin -Times 1
+        Should -InvokeVerifiable
+      }
+    }
+  }
 }
