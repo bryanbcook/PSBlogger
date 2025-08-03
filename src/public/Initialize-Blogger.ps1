@@ -23,9 +23,13 @@ Initiate a login flow with Google
 
 .NOTES
   Note that this function requires administrator permissions to support the authentication flow.
+  
+  Pandoc is a dependency for this module. If it's not installed and the user has Chocolately installed,
+  the function will prompt to install pandoc using Chocolatey. To disable the prompt, change the
+  ConfirmPreference to 'None' or use the -Confirm:$false parameter. 
 #>
 Function Initialize-Blogger {
-  [CmdletBinding()]
+  [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
   Param(
     [Parameter(HelpMessage = "Google API ClientId")]
     [string]$ClientId = "<<CLIENT_ID>>",
@@ -45,6 +49,21 @@ Function Initialize-Blogger {
   }
 
   $ErrorActionPreference = 'Stop'
+
+  # Check if Pandoc is installed
+  if (-not (Test-PandocInstalled)) {
+    Write-Warning "Pandoc is not installed or not available in PATH."
+    
+    if (Test-ChocolateyInstalled) {
+      # Prompt user to install Pandoc using Chocolatey if $ConfirmPreference is set to 'Medium' or higher
+      if ($PSCmdlet.ShouldProcess("Pandoc", "Install using Chocolatey")) {
+        Install-PandocWithChocolatey
+      }
+      else {
+        Write-Warning "Pandoc installation skipped. Note that certain functions may fail."
+      }
+    }
+  }
 
   # Show warning to developers if they attempt to use the neutered credentials by mistake
   if ($env:PSBLOGGER_CLIENT_ID -and !$PSBoundParameters.ContainsKey("ClientId"))

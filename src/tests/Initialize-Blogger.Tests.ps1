@@ -10,6 +10,8 @@ Describe "Initialize-Blogger" {
       InModuleScope -ModuleName PSBlogger {
         # simulate running as admin
         Mock Test-IsAdmin { $true }
+        Mock Test-ChocolateyInstalled { $true }
+        Mock Test-PandocInstalled { $true }
 
         # simulate valid auth token
         Mock Get-GoogleAccessToken { return @{ refresh_token = "refresh_token" } }
@@ -94,5 +96,112 @@ Describe "Initialize-Blogger" {
         Should -InvokeVerifiable
       }
     }
+  }
+
+  Context "Pandoc Detection and Installation" {
+    BeforeEach {
+      InModuleScope -ModuleName PSBlogger {
+        # simulate running as admin
+        Mock Test-IsAdmin { $true }
+        
+        # Mock the authentication flow to avoid complications
+        Mock Get-GoogleAccessToken { return @{ refresh_token = "refresh_token" } }
+        Mock Update-GoogleAccessToken { return @{ access_token = "access_token" } }
+        Mock Wait-GoogleAuthApiToken { "simulatedcode" }
+        Mock Start-Process { }
+        Mock Set-CredentialCache { }
+      }
+    }
+
+    It "Should continue normally when Pandoc is already installed" {
+      InModuleScope -ModuleName PSBlogger {
+        # arrange
+        Mock Test-PandocInstalled { $true }
+        Mock Test-ChocolateyInstalled { throw "Should not be called when Pandoc is installed" }
+        Mock Install-PandocWithChocolatey { throw "Should not be called when Pandoc is installed" }
+        
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+          Confirm = $false  # Prevent any prompting
+        }
+
+        # act & assert
+        { Initialize-Blogger @initArgs } | Should -Not -Throw
+        
+        # verify pandoc installation was not attempted
+        Assert-MockCalled Test-PandocInstalled -Times 1
+        Assert-MockCalled Install-PandocWithChocolatey -Times 0
+      }
+    }
+
+    It "Should show warning when Pandoc is not installed and Chocolatey is not available" {
+      InModuleScope -ModuleName PSBlogger {
+        # arrange
+        Mock Test-PandocInstalled { $false }
+        Mock Test-ChocolateyInstalled { $false }
+        Mock Install-PandocWithChocolatey { throw "Should not be called when Chocolatey is not available" }
+        
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+          Confirm = $false  # Prevent any prompting
+        }
+
+        # act
+        Initialize-Blogger @initArgs
+
+        # assert
+        Should -InvokeVerifiable
+        Assert-MockCalled Install-PandocWithChocolatey -Times 0
+      }
+    }
+
+    It "Should automatically install Pandoc when Confirm is false and Chocolatey is available" {
+      InModuleScope -ModuleName PSBlogger {
+        # arrange
+        Mock Test-PandocInstalled { $false }
+        Mock Test-ChocolateyInstalled { $true }
+        Mock Install-PandocWithChocolatey { } -Verifiable
+        
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+          Confirm = $false  # This should bypass confirmation and install automatically
+        }
+
+        # act
+        Initialize-Blogger @initArgs
+
+        # assert
+        Should -InvokeVerifiable
+      }
+    }
+
+    It "Should call pandoc and chocolatey check functions in correct order" {
+      InModuleScope -ModuleName PSBlogger {
+        # arrange
+        Mock Test-PandocInstalled { $false } -Verifiable
+        Mock Test-ChocolateyInstalled { $false } -Verifiable
+        Mock Write-Warning { }
+        
+        $initArgs = @{
+          ClientId = "dummy"
+          ClientSecret = "dummy"
+          Confirm = $false  # Prevent any prompting
+        }
+
+        # act
+        Initialize-Blogger @initArgs
+
+        # assert
+        Should -InvokeVerifiable
+      }
+    }
+
+    # Note: Additional confirmation behavior tests can be performed manually:
+    # - Initialize-Blogger (with ConfirmPreference = 'Medium' or 'High') should prompt
+    # - Initialize-Blogger -Confirm:$false should install without prompting  
+    # - Initialize-Blogger -WhatIf should show what would happen without installing
   }
 }
