@@ -76,7 +76,7 @@ Function Initialize-Blogger {
     Write-Verbose "Using environment variable PSBLOGGER_CLIENT_SECRET for ClientSecret"
     $ClientSecret = $env:PSBLOGGER_CLIENT_SECRET
   }
-  if ($ClientId -eq "<<CLIENT_ID>>" -or $ClientSecret -eq "<<CLIENT_SECRET>>") {
+  if ($ClientId -like "*CLIENT_ID*" -or $ClientSecret -like "*CLIENT_SECRET*") {
     Write-Error "See contribution guide for how to set up your own Google API for local development."
     return
   }
