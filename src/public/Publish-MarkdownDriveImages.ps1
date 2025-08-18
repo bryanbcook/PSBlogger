@@ -48,7 +48,7 @@ Function Publish-MarkdownDriveImages
 
   # Process images: detect, upload to Google Drive, and update markdown
   $imageMappings = @()
-  $images = Find-MarkdownImages -File $File -AttachmentsDirectory $AttachmentsDirectory
+  $images = Find-MarkdownImages -File $File -AttachmentsDirectory $AttachmentsDirectory -ExcludeExternal
   
   if ($images -and $images.Count -gt 0) {
     Write-Verbose "Found $($images.Count) local images to upload to Google Drive"

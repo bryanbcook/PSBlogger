@@ -15,6 +15,49 @@ Describe "Find-MarkdownImages" {
   }
 
   Context "Basic image detection" {
+      It "Should include external images by default" {
+        # arrange
+        $markdownFile = "TestDrive:\external.md"
+        $markdownContent = @(
+          "# Test Post"
+          ""
+          "External image:"
+          "![External](https://example.com/image.png)"
+        ) -join [Environment]::NewLine
+        Set-MarkdownFile $markdownFile $markdownContent
+
+        # act
+        $result = Find-MarkdownImages -File $markdownFile
+
+        # assert
+        $result.Count | Should -Be 1
+        $result[0].AltText | Should -Be "External"
+        $result[0].RelativePath | Should -Be "https://example.com/image.png"
+        $result[0].LocalPath | Should -Be "https://example.com/image.png"
+      }
+
+      It "Should exclude external images when -ExcludeExternal is used" {
+        # arrange
+        $markdownFile = "TestDrive:\external-exclude.md"
+        $markdownContent = @(
+          "# Test Post"
+          ""
+          "External image:"
+          "![External](https://example.com/image.png)"
+          "Local image:"
+          "![Local](test-image1.png)"
+        ) -join [Environment]::NewLine
+        Set-MarkdownFile $markdownFile $markdownContent
+
+        # act
+        $result = Find-MarkdownImages -File $markdownFile -ExcludeExternal
+
+        # assert
+        $result.Count | Should -Be 1
+        $result[0].AltText | Should -Be "Local"
+        $result[0].FileName | Should -Be "test-image1.png"
+        $result[0].RelativePath | Should -Be "test-image1.png"
+      }
 
     It "Should return an empty array if there are no images" {
       # arrange
@@ -105,6 +148,12 @@ Describe "Find-MarkdownImages" {
   }
 
   Context "Image Path resolution" {
+      It "Should return the original value for external URLs in Resolve-ImageFilePath" {
+        InModuleScope PSBlogger {
+          $result = Resolve-ImageFilePath -FilePath "https://example.com/image.png" -BaseDirectory "TestDrive:/" -AttachmentsDirectory "TestDrive:/attachments"
+          $result | Should -Be "https://example.com/image.png"
+        }
+      }
     It "Should resolve relative paths correctly" {
       # arrange
       $markdownFile = "TestDrive:\relative.md"
@@ -174,7 +223,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should resolve absolute image in the attachments directory" {
       # arrange
-      $markdownFile = "TestDrive:\attachments.md"
+      $markdownFile = Join-Path "TestDrive" "attachments.md"
       $markdownContent = @(
         ""
         "![Image in attachments](test-attachment1.png)"
@@ -187,12 +236,12 @@ Describe "Find-MarkdownImages" {
       # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-attachment1.png"
-      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments*test-attachment1.png"
     }
 
     It "Should resolve absolute image with subfolder relative to the attachments directory" {
       # arrange
-      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownFile = Join-Path "TestDrive" "attachments-subfolder.md"
       $markdownContent = @(
         ""
         "![Image in subfolder](subfolder/test-attachment2.jpg)"
@@ -205,12 +254,12 @@ Describe "Find-MarkdownImages" {
       # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-attachment2.jpg"
-      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments*subfolder*test-attachment2.jpg"
     }
 
     It "Should find images in subfolders of the attachments directory when markdown does not specify a subfolder" {
       # arrange
-      $markdownFile = "TestDrive:\attachments-subfolder.md"
+      $markdownFile = Join-Path "TestDrive" "attachments-subfolder.md"
       $markdownContent = @(
         ""
         "![Image in subfolder](test-attachment2.jpg)" # this is in the subfolder
@@ -223,7 +272,7 @@ Describe "Find-MarkdownImages" {
       # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-attachment2.jpg"
-      $result[0].LocalPath | Should -BeLike "*attachments\subfolder\test-attachment2.jpg"
+      $result[0].LocalPath | Should -BeLike "*attachments*subfolder*test-attachment2.jpg"
     }
 
     It "Should use folder of file if attachments directory is not specified" {
@@ -241,7 +290,7 @@ Describe "Find-MarkdownImages" {
       # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-attachment1.png"
-      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments*test-attachment1.png"
     }
 
     It "Should use attachments directory user preference if available" {
@@ -265,7 +314,7 @@ Describe "Find-MarkdownImages" {
       # assert
       $result.Count | Should -Be 1
       $result[0].FileName | Should -Be "test-attachment1.png"
-      $result[0].LocalPath | Should -BeLike "*attachments\test-attachment1.png"
+      $result[0].LocalPath | Should -BeLike "*attachments*test-attachment1.png"
     }
   }
 
@@ -282,7 +331,7 @@ Describe "Find-MarkdownImages" {
       Set-MarkdownFile $markdownFile $markdownContent
 
       # act
-      $result = Find-MarkdownImages -File $markdownFile
+      $result = Find-MarkdownImages -File $markdownFile -ExcludeExternal
 
       # assert
       $result.Count | Should -Be 1
@@ -511,7 +560,7 @@ Describe "Find-MarkdownImages" {
       Set-MarkdownFile $markdownFile $markdownContent
 
       # act
-      $result = Find-MarkdownImages -File $markdownFile
+      $result = Find-MarkdownImages -File $markdownFile -ExcludeExternal
 
       # assert
       $result.Count | Should -Be 1
