@@ -202,7 +202,7 @@ Describe "Publish-MarkdownDriveImages" {
           }
         } -Verifiable
 
-        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "subfolder/test-image2.jpg" } {
           return [PSCustomObject]@{
             id = "mock-file-id-2"
             name = "test-image2.jpg"
@@ -279,7 +279,7 @@ Describe "Publish-MarkdownDriveImages" {
           }
         } -Verifiable
 
-        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "subfolder/test-image2.jpg" } {
           return $null
         } -Verifiable
 
