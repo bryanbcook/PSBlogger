@@ -4,12 +4,12 @@ function Set-MarkdownFile($path, $content) {
     Set the content of a markdown file
   #>
     # resolve path
-  $path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
-  $Folder = [System.IO.Path]::GetDirectoryName($path)
+  $resolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
+  $Folder = [System.IO.Path]::GetDirectoryName($resolvedPath)
   if (-not (Test-Path -Path $Folder)) {
     New-Item -ItemType Directory -Path $Folder -Force | Out-Null
   }
-  Set-Content -Path $path -Value $content
+  Set-Content -Path $resolvedPath -Value $content
 }
 
 function New-BlogPost($id) {

@@ -17,7 +17,7 @@ Describe "Find-MarkdownImages" {
   Context "Basic image detection" {
       It "Should include external images by default" {
         # arrange
-        $markdownFile = "TestDrive:\external.md"
+        $markdownFile = Join-Path "TestDrive:" "external.md"
         $markdownContent = @(
           "# Test Post"
           ""
@@ -38,7 +38,7 @@ Describe "Find-MarkdownImages" {
 
       It "Should exclude external images when -ExcludeExternal is used" {
         # arrange
-        $markdownFile = "TestDrive:\external-exclude.md"
+        $markdownFile = Join-Path "TestDrive:" "external-exclude.md"
         $markdownContent = @(
           "# Test Post"
           ""
@@ -61,7 +61,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should return an empty array if there are no images" {
       # arrange
-      $markdownFile = "TestDrive:\no-images.md"
+      $markdownFile = Join-Path "TestDrive:" "no-images.md"
       $markdownContent = "# Test Post"
       Set-MarkdownFile $markdownFile $markdownContent
 
@@ -75,7 +75,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find images with alt text only" {
       # arrange
-      $markdownFile = "TestDrive:\basic.md"
+      $markdownFile = Join-Path "TestDrive:" "basic.md"
       $markdownContent = @(
         "# Test Post"
         ""
@@ -98,7 +98,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find images with alt text and title" {
       # arrange
-      $markdownFile = "TestDrive:\with-title.md"
+      $markdownFile = Join-Path "TestDrive:" "with-title.md"
       $markdownContent = @(
         "# Test Post"
         ""
@@ -120,7 +120,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find multiple images in the same file" {
       # arrange
-      $markdownFile = "TestDrive:\multiple.md"
+      $markdownFile = Join-Path "TestDrive:" "multiple.md"
       $markdownContent = @(
         "# Test Post"
         ""
@@ -156,7 +156,7 @@ Describe "Find-MarkdownImages" {
       }
     It "Should resolve relative paths correctly" {
       # arrange
-      $markdownFile = "TestDrive:\relative.md"
+      $markdownFile = Join-Path "TestDrive:" "relative.md"
       $markdownContent = @(
         ""
         "![Relative image](./subfolder/test-image2.jpg)"
@@ -175,8 +175,8 @@ Describe "Find-MarkdownImages" {
 
     It "Should handle absolute paths" {
       # arrange
-      $markdownFile = "TestDrive:\absolute.md"
-      $absolutePath = (Get-Item "TestDrive:\absolute-image.gif").FullName
+      $markdownFile = Join-Path "TestDrive:" "absolute.md"
+      $absolutePath = (Get-Item (Join-Path "TestDrive:" "absolute-image.gif")).FullName
       $markdownContent = @(
         ""
         "![Absolute image]($absolutePath)"
@@ -195,9 +195,9 @@ Describe "Find-MarkdownImages" {
     It "Should handle parent directory references" {
       # arrange
       # Create a markdown file in a subdirectory
-      $subDir = "TestDrive:\subdir"
+      $subDir = Join-Path "TestDrive:" "subdir"
       New-Item -Path $subDir -ItemType Directory -Force
-      $markdownFile = "$subDir\parent-ref.md"
+      $markdownFile = Join-Path $subDir "parent-ref.md"
       $markdownContent = @(
         ""
         "![Parent image](../test-image1.png)"
@@ -223,7 +223,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should resolve absolute image in the attachments directory" {
       # arrange
-      $markdownFile = Join-Path "TestDrive" "attachments.md"
+      $markdownFile = Join-Path "TestDrive:" "attachments.md"
       $markdownContent = @(
         ""
         "![Image in attachments](test-attachment1.png)"
@@ -241,7 +241,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should resolve absolute image with subfolder relative to the attachments directory" {
       # arrange
-      $markdownFile = Join-Path "TestDrive" "attachments-subfolder.md"
+      $markdownFile = Join-Path "TestDrive:" "attachments-subfolder.md"
       $markdownContent = @(
         ""
         "![Image in subfolder](subfolder/test-attachment2.jpg)"
@@ -259,7 +259,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find images in subfolders of the attachments directory when markdown does not specify a subfolder" {
       # arrange
-      $markdownFile = Join-Path "TestDrive" "attachments-subfolder.md"
+      $markdownFile = Join-Path "TestDrive:" "attachments-subfolder.md"
       $markdownContent = @(
         ""
         "![Image in subfolder](test-attachment2.jpg)" # this is in the subfolder
@@ -277,7 +277,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should use folder of file if attachments directory is not specified" {
       # arrange
-      $markdownFile = "TestDrive:\relative-path.md"
+      $markdownFile = Join-Path "TestDrive:" "relative-path.md"
       $markdownContent = @(
         ""
         "![Image with relative path](test-attachment1.png)"
@@ -321,7 +321,7 @@ Describe "Find-MarkdownImages" {
   Context "Filtering and validation" {
     It "Should skip images that are already web hosted (HTTP/HTTPS)" {
       # arrange
-      $markdownFile = "TestDrive:\with-urls.md"
+      $markdownFile = Join-Path "TestDrive:" "with-urls.md"
       $markdownContent = @(
         ""
         "![Local image](test-image1.png)"
@@ -340,7 +340,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should skip non-existent files" {
       # arrange
-      $markdownFile = "TestDrive:\missing-files.md"
+      $markdownFile = Join-Path "TestDrive:" "missing-files.md"
       $markdownContent = @(
         ""
         "![Existing image](test-image1.png)"
@@ -360,7 +360,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should handle empty alt text" {
       # arrange
-      $markdownFile = "TestDrive:\empty-alt.md"
+      $markdownFile = Join-Path "TestDrive:" "empty-alt.md"
       $markdownContent = @(
         ""
         "![](test-image1.png)"
@@ -380,10 +380,10 @@ Describe "Find-MarkdownImages" {
   Context "Edge cases and special characters" {
     It "Should handle images with spaces in filenames" {
       # arrange
-      $imageWithSpaces = "TestDrive:\image with spaces.png"
+      $imageWithSpaces = Join-Path "TestDrive:" "image with spaces.png"
       Set-Content -Path $imageWithSpaces -Value "fake content"
-      
-      $markdownFile = "TestDrive:\spaces.md"
+
+      $markdownFile = Join-Path "TestDrive:" "spaces.md"
       $markdownContent = @(
         ""
         "![Image with spaces](image with spaces.png)"
@@ -400,7 +400,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should handle special characters in alt text" {
       # arrange
-      $markdownFile = "TestDrive:\special-chars.md"
+      $markdownFile = Join-Path "TestDrive:" "special-chars.md"
       $markdownContent = @(
         ""
         "![Alt with `"quotes`" and 'apostrophes'](test-image1.png)"
@@ -417,7 +417,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should handle markdown files with no images" {
       # arrange
-      $markdownFile = "TestDrive:\no-images.md"
+      $markdownFile = Join-Path "TestDrive:" "no-images.md"
       $markdownContent = @(
         "# Test Post"
         ""
@@ -436,7 +436,7 @@ Describe "Find-MarkdownImages" {
   Context "Return object structure" {
     It "Should return objects with all expected properties" {
       # arrange
-      $markdownFile = "TestDrive:\properties.md"
+      $markdownFile = Join-Path "TestDrive:" "properties.md"
       $markdownContent = @(
         ""
         "![Test Alt](test-image1.png `"Test Title`")"
@@ -523,7 +523,7 @@ Describe "Find-MarkdownImages" {
     It "Should handle <Name>" -TestCases $obsidianTestCases {
       param($Name, $Content, $ExpectedCount, $ExpectedAltText, $ExpectedFileName, $ExpectedOriginal)
       # arrange
-      $markdownFile = "TestDrive:\obsidian-test.md"
+      $markdownFile = Join-Path "TestDrive:" "obsidian-test.md"
       Set-MarkdownFile $markdownFile $Content
 
       # act
@@ -551,7 +551,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should skip Obsidian images with HTTP URLs" {
       # arrange
-      $markdownFile = "TestDrive:\obsidian-urls.md"
+      $markdownFile = Join-Path "TestDrive:" "obsidian-urls.md"
       $markdownContent = @(
         "![[test-image1.png|Local image]]",
         "![[http://example.com/image.jpg|HTTP image]]",
@@ -569,7 +569,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should skip non-existent Obsidian images" {
       # arrange
-      $markdownFile = "TestDrive:\obsidian-missing.md"
+      $markdownFile = Join-Path "TestDrive:" "obsidian-missing.md"
       $markdownContent = @(
         "![[test-image1.png|Existing image]]",
         "![[does-not-exist.jpg|Missing image]]",
@@ -589,7 +589,7 @@ Describe "Find-MarkdownImages" {
     It "Should not find embedded markdown content" {
       # arrange
       # obsidian can link content from an external file as an embedded markdown block
-      $markdownFile = "TestDrive:\obsidian-embedded.md"
+      $markdownFile = Join-Path "TestDrive:" "obsidian-embedded.md"
       $markdownContent = "![[Embedded Markdown Page|Title]]"
       Set-MarkdownFile $markdownFile $markdownContent
 
@@ -651,7 +651,7 @@ Describe "Find-MarkdownImages" {
     It "Should handle <Name>" -TestCases $mixedFormatTestCases {
       param($Name, $Content, $ExpectedCount, $ExpectedAltTexts, $ExpectedTitles)
       # arrange
-      $markdownFile = "TestDrive:\mixed-format-test.md"
+      $markdownFile = Join-Path "TestDrive:" "mixed-format-test.md"
       Set-MarkdownFile $markdownFile $Content
 
       # act
