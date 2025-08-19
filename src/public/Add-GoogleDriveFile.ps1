@@ -10,7 +10,7 @@
   The local path to the file to upload.
 
 .PARAMETER FileName
-  Optional custom name for the file. If not specified, uses the original filename.
+  Optional custom name for the file. If not specified, uses the original filename. Can include the target folder structure.
 
 .PARAMETER Force
   If specified, will overwrite an existing file with the same name in the target folder.
@@ -43,24 +43,15 @@ function Add-GoogleDriveFile {
     $FileName = $sourceItem.Name
   }
 
-  # First, find or create the upload folder in Google Drive
-  Write-Verbose "Add-GoogleDriveFile: Verifying target folder: $TargetFolderName"
-  $folder = Get-GoogleDriveItems -ResultType "Folders" -Title $TargetFolderName
+  $relativeFolderPath = "$TargetFolderName/$(Split-Path -Path $FileName.ToLower() -Parent)".Replace('\', '/').Trim('/')
+  $relativeFilePath = Split-Path -Path $FileName -Leaf
 
-  if (-not $folder) {
-    # Create the folder if it doesn't exist
-    Write-Verbose "Add-GoogleDriveFile: Folder '$TargetFolderName' not found. Creating new folder."
-    $folder = Add-GoogleDriveFolder -Name $TargetFolderName
-  }
-  else {
-    # Get the first folder if multiple exist
-    Write-Verbose "Add-GoogleDriveFile: Folder '$TargetFolderName' found."
-    $folder = $folder | Select-Object -First 1
-  }
+  # First, find or create the upload folder in Google Drive
+  $folder = Resolve-GoogleDriveFolder -FolderPath $relativeFolderPath
 
   # Determine if the file already exists in the target folder
-  Write-Verbose "Add-GoogleDriveFile: Checking if file '$FileName' already exists in folder '$TargetFolderName'"
-  $existingFile = Get-GoogleDriveItems -ResultType "Files" -Title $FileName -ParentId $folder.id
+  Write-Verbose "Add-GoogleDriveFile: Checking if file '$relativeFilePath' already exists in folder '$relativeFolderPath'"
+  $existingFile = Get-GoogleDriveItems -ResultType "Files" -Title $relativeFilePath -ParentId $folder.id
   if ($existingFile) {
     if (-not $Force) {
       # use existing file
@@ -75,7 +66,7 @@ function Add-GoogleDriveFile {
     
   # Prepare metadata for the file
   $metadata = @{
-    name    = $FileName
+    name    = $relativeFilePath
     parents = @($folder.id)
   } | ConvertTo-Json -Compress
 
