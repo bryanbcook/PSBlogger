@@ -4,11 +4,11 @@ function Get-GoogleAccessToken
         [Parameter(Mandatory=$true)]
         [string]$code,
 
-        [Parameter()]
-        [string]$clientId = "284606892422-ribvo7oodlbtd70e8onn8rg4hm58mluj.apps.googleusercontent.com",
+        [Parameter(Mandatory=$true)]
+        [string]$clientId,
 
-        [Parameter()]
-        [string]$clientSecret = "PUK0j9ig-GHcSByQao2i1aIa",
+        [Parameter(Mandatory=$true)]
+        [string]$clientSecret,
 
         [Parameter()]
         [string]$redirectUri = "http://localhost/oauth2callback"
@@ -39,10 +39,10 @@ function Update-GoogleAccessToken
 {
     param(
         [Parameter()]
-        [string]$clientId = "284606892422-ribvo7oodlbtd70e8onn8rg4hm58mluj.apps.googleusercontent.com",
+        [string]$clientId,
 
         [Parameter()]
-        [string]$clientSecret = "PUK0j9ig-GHcSByQao2i1aIa",
+        [string]$clientSecret,
 
         [Parameter()]
         [string]$refreshToken
