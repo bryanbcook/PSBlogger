@@ -27,7 +27,7 @@ Describe 'Add-GoogleDriveFile' {
 
           # folder does not exist
           Mock Get-GoogleDriveItems -ParameterFilter {
-            $ResultType -eq "Folders" -and $Title -eq "TestFolder"
+            $ResultType -eq "Folders"
           } { return $null }
 
           # folder was added
@@ -55,7 +55,7 @@ Describe 'Add-GoogleDriveFile' {
           InModuleScope PSBlogger {
             # folder exists
             Mock Get-GoogleDriveItems -ParameterFilter {
-              $ResultType -eq "Folders" -and $Title -eq "TestFolder"
+              $ResultType -eq "Folders"
             } { return @([pscustomobject]@{ id = "12345"; name = "TestFolder" }) }
           }
         }
@@ -144,6 +144,91 @@ Describe 'Add-GoogleDriveFile' {
           Should -InvokeVerifiable
         }
       }
+
+      Context "Preserve subfolder path" {
+
+        It "Should create full paths in GoogleDrive matching the supplied FileName" {
+          # arrange
+          InModuleScope PSBlogger {
+            # folders do not exist
+            Mock Get-GoogleDriveItems -ParameterFilter {
+              $ResultType -eq "Folders"
+            } { return $null }
+
+            # create root folder
+            Mock Add-GoogleDriveFolder -ParameterFilter { $Name -eq "TestFolder" } {
+              return [pscustomobject]@{ id = "12345"; name = "TestFolder" }
+            } -Verifiable
+
+            # create subfolder
+            Mock Add-GoogleDriveFolder -ParameterFilter { $Name -eq "subfolder" -and $ParentId -eq "12345" } {
+              return [pscustomobject]@{ id = "67890"; name = "subfolder" }
+            } -Verifiable
+
+            # file in subfolder does not exist
+            Mock Get-GoogleDriveItems -ParameterFilter {
+              $ResultType -eq "Files" -and $Title -eq "my.png" -and $ParentId -eq "67890"
+            } { return $null }
+
+            # file was added
+            Mock Invoke-GApi -ParameterFilter {
+              $uri -eq "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" -and `
+              $body -match '"parents":\s*\["67890"\]' -and `
+              $body -match '"name":\s*"my\.png"'
+            } {
+              return [pscustomobject]@{ id = "abcde"; name = "my.png" }
+            } -Verifiable
+          }
+
+          # act
+          $result = Add-GoogleDriveFile -FilePath "$PSScriptRoot\data\my.png" -FileName "subfolder/my.png" -TargetFolderName "TestFolder"
+
+          # assert
+          $result | Should -Not -BeNullOrEmpty
+          Should -InvokeVerifiable
+        }
+
+        It "Should create missing subfolders in Google Drive matching the supplied FileName" {
+          # arrange
+          InModuleScope PSBlogger {
+            # folders do not exist
+            Mock Get-GoogleDriveItems -ParameterFilter {
+              $ResultType -eq "Folders"
+            } { 
+              @(
+                [pscustomobject]@{ id= "12345"; name = "TestFolder" }
+              )
+            }
+
+            # create subfolder
+            Mock Add-GoogleDriveFolder -ParameterFilter { $Name -eq "subfolder" -and $ParentId -eq "12345" } {
+              return [pscustomobject]@{ id = "67890"; name = "subfolder" }
+            } -Verifiable
+
+            # file in subfolder does not exist
+            Mock Get-GoogleDriveItems -ParameterFilter {
+              $ResultType -eq "Files" -and $Title -eq "my.png" -and $ParentId -eq "67890"
+            } { return $null }
+
+            # file was added
+            Mock Invoke-GApi -ParameterFilter {
+              $uri -eq "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" -and `
+              $body -match '"parents":\s*\["67890"\]' -and `
+              $body -match '"name":\s*"my\.png"'
+            } {
+              return [pscustomobject]@{ id = "abcde"; name = "my.png" }
+            } -Verifiable
+          }
+
+          # act
+          $result = Add-GoogleDriveFile -FilePath "$PSScriptRoot\data\my.png" -FileName "subfolder/my.png" -TargetFolderName "TestFolder"
+
+          # assert
+          $result | Should -Not -BeNullOrEmpty
+          Should -InvokeVerifiable
+
+        }
+      }
     }
 
     Context "Existing File" {
@@ -152,7 +237,7 @@ Describe 'Add-GoogleDriveFile' {
         InModuleScope PSBlogger {
           # folder exists
           Mock Get-GoogleDriveItems -ParameterFilter {
-            $ResultType -eq "Folders" -and $Title -eq "TestFolder"
+            $ResultType -eq "Folders"
           } { return @([pscustomobject]@{ id = "12345"; name = "TestFolder" }) }
 
           # file exists

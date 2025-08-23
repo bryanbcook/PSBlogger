@@ -62,7 +62,7 @@ Function Publish-MarkdownDriveImages
         # Use the Force parameter when calling Add-GoogleDriveFile
         $uploadParams = @{
           FilePath = $image.LocalPath
-          FileName = $image.FileName
+          FileName = $image.RelativePath # name that appears in markdown, including any folder structures
           Force = $Force
         }
         

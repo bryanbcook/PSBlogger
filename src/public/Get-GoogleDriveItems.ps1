@@ -58,6 +58,7 @@ function Get-GoogleDriveItems {
   $queryArgs = @{
     q        = [System.Web.HttpUtility]::UrlEncode($q -join ' and ')
     pageSize = 40
+    fields   = "nextPageToken,files(id,name,mimeType,parents)"
   }
 
   do {
