@@ -4,7 +4,13 @@ function Get-AuthHeader()
 
     if (!(Test-GoogleAccessToken $BloggerSession.AccessToken))
     {
-        $token = Update-GoogleAccessToken -refreshToken $BloggerSession.RefreshToken
+        $credentialCache = Get-CredentialCache
+        $updateArgs = @{
+            clientId = $credentialCache.client_id
+            clientSecret = $credentialCache.client_secret
+            refreshToken = $BloggerSession.RefreshToken
+        }
+        $token = Update-GoogleAccessToken @updateArgs
         Update-CredentialCache -token $token
     }
 

@@ -202,7 +202,7 @@ Describe "Publish-MarkdownDriveImages" {
           }
         } -Verifiable
 
-        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "subfolder/test-image2.jpg" } {
           return [PSCustomObject]@{
             id = "mock-file-id-2"
             name = "test-image2.jpg"
@@ -279,7 +279,7 @@ Describe "Publish-MarkdownDriveImages" {
           }
         } -Verifiable
 
-        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "test-image2.jpg" } {
+        Mock Add-GoogleDriveFile -ParameterFilter { $FileName -eq "subfolder/test-image2.jpg" } {
           return $null
         } -Verifiable
 
@@ -507,6 +507,76 @@ Describe "Publish-MarkdownDriveImages" {
 
       # assert
       Should -InvokeVerifiable
+    }
+  }
+
+  Context "OutFile Parameter" {
+
+    BeforeEach {
+      InModuleScope PSBlogger {
+        Mock Add-GoogleDriveFile {
+          return @{ id = "123"; PublicUrl = "https://drive.google.com/uc?export=view&id=123" }
+        }
+        Mock Set-GoogleDriveFilePermission { }
+        Mock New-GoogleDriveFilePermission { return @{ role = "reader"; type = "anyone" } }
+      }
+    }
+
+    It "Should write updated markdown to OutFile when specified" {
+      # arrange
+      $outFile = "TestDrive:\output-with-updated-images.md"
+
+      # act
+      Publish-MarkdownDriveImages -File $fileWithSingleImage -OutFile $outFile
+
+      # assert
+      Test-Path $outFile | Should -Be $true
+      $outFileContent = Get-Content $outFile -Raw
+      $outFileContent | Should -Match "https://drive.google.com/uc\?export=view&id=123"
+    }
+
+    It "Should preserve original file content when OutFile is specified" {
+      # arrange
+      $outFile = "TestDrive:\modified-file.md"
+
+      # act
+      Publish-MarkdownDriveImages -File $fileWithSingleImage -OutFile $outFile
+
+      # assert
+      $originalFileContent = Get-Content $fileWithSingleImage -Raw
+      $originalFileContent.TrimEnd() | Should -Be $fileWithSingleImageMarkdown.TrimEnd()
+      $originalFileContent | Should -Not -Match "https://drive.google.com"
+    }
+
+    It "Should always create OutFile parameter even when no images are found" {
+      # arrange
+      $markdownFile = "TestDrive:\no-images.md"
+      $outFile = "TestDrive:\no-images-output.md"
+      $markdownContent = "# Test Post`n`nThis post has no images."
+      Set-MarkdownFile $markdownFile $markdownContent
+
+      # act
+      $result = Publish-MarkdownDriveImages -File $markdownFile -OutFile $outFile
+
+      # assert
+      $result | Should -Be @()
+      Test-Path $outFile | Should -Be $true
+    }
+
+    It "Should handle invalid OutFile path gracefully" {
+      # arrange
+      $invalidOutFile = "InvalidDrive:\nonexistent\path\output.md"
+
+      InModuleScope PSBlogger {
+        Mock Add-GoogleDriveFile {
+          return @{ id = "123"; PublicUrl = "https://drive.google.com/uc?export=view&id=123" }
+        }
+        Mock Set-GoogleDriveFilePermission { }
+        Mock New-GoogleDriveFilePermission { return @{ role = "reader"; type = "anyone" } }
+      }
+
+      # act & assert
+      { Publish-MarkdownDriveImages -File $fileWithSingleImage -OutFile $invalidOutFile } | Should -Throw
     }
   }
 }

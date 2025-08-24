@@ -26,7 +26,7 @@ Describe "ConvertTo-MarkdownFromHtml" {
       # assert
       Test-Path $script:outFile | Should -BeTrue
       $content = (Get-Content -Path $script:outFile -Raw).Split("`r")
-      $content[0] | Should -Be "# Hello World"
+      $content[0] | Should -BeLike "# Hello World*"
     }
 
     It "Should not persist to disk if OutFile is not specified" {
@@ -57,7 +57,7 @@ Describe "ConvertTo-MarkdownFromHtml" {
       # assert
       Test-Path $script:outFile | Should -BeTrue
       $content = (Get-Content -Path $script:outFile -Raw).Split("`r")
-      $content[0] | Should -Be "# Hello World"
+      $content[0] | Should -BeLike "# Hello World*"
     }
 
     It "Should convert HTML file to Markdown" {

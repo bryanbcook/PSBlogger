@@ -14,6 +14,9 @@
 .PARAMETER AttachmentsDirectory
   The directory where attachments are stored. If specified, it will be used to resolve relative paths for images.
 
+.PARAMETER ExcludeExternal
+  If specified, excludes images with external URLs (starting with https). Otherwise, all images are returned.
+
 .EXAMPLE
     Find-MarkdownImages -File "post.md"
 
@@ -30,7 +33,10 @@ function Find-MarkdownImages {
     [string]$File,
 
     [Parameter(Mandatory = $false)]
-    [string]$AttachmentsDirectory
+    [string]$AttachmentsDirectory,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$ExcludeExternal
   )
 
   $content = Get-Content -Path $File -Raw
@@ -102,8 +108,8 @@ function Find-MarkdownImages {
       $title = ""  # Obsidian format doesn't support titles
     }
         
-    # Skip URLs (images already hosted online)
-    if ($imagePath -match '^https?://') {
+    # Conditionally skip external URLs if -ExcludeExternal is specified
+    if ($ExcludeExternal -and ($imagePath -match '^http(s)?://')) {
       continue
     }
         
@@ -114,7 +120,7 @@ function Find-MarkdownImages {
                       -AttachmentsDirectory $AttachmentsDirectory
 
     # Check if the file exists
-    if (Test-Path -Path $resolvedPath -PathType Leaf) {
+    if ($resolvedPath -match '^http(s)?://' -or (Test-Path -Path $resolvedPath -PathType Leaf)) {
       $images += New-MarkdownImage `
         -OriginalMarkdown $match.Value `
         -AltText $altText `
@@ -163,6 +169,10 @@ Function Resolve-ImageFilePath
   } else {
     # If the path is absolute, use it as is
     $resolvedPath = $FilePath
+  }
+  if ($FilePath -match '^http(s)?://') {
+    Write-Verbose "Found external image URL: $FilePath"
+    return $FilePath
   }
   if (Test-Path $resolvedPath) {
     Write-Verbose "Found image at base directory: $resolvedPath"
