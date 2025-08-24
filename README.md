@@ -30,8 +30,6 @@ A PowerShell library for publishing markdown files authored in markdown to Blogg
    >
    > - You may need to perform this command with an elevated command-prompt (Administrator) as this
    >   activity opens a temporary port listener for oauth callbacks.
-   >
-   > - You may be prompted that _Google hasn't verified the app yet_. Working on it. Click Continue for now.
 
 1. List your blogs
 
