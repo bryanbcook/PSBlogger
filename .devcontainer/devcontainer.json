@@ -5,7 +5,9 @@
   "features": {
     "ghcr.io/devcontainers/features/powershell:1": {},
     "ghcr.io/devcontainers-community/npm-features/typescript:1": {},
-    "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {}
+    "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git-lfs:1": {}
   },
   "postCreateCommand": "pwsh -Command 'Install-Module -Name Pester -Force -Scope AllUsers; Install-Module -Name powershell-yaml -Force -Scope AllUsers'",
   "customizations": {
