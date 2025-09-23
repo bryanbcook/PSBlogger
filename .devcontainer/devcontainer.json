@@ -1,0 +1,26 @@
+// See https://aka.ms/devcontainer for more information.
+{
+  "name": "PSBlogger DevContainer",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/powershell:1": {},
+    "ghcr.io/devcontainers-community/npm-features/typescript:1": {},
+    "ghcr.io/rocker-org/devcontainer-features/pandoc:1": {}
+  },
+  "postCreateCommand": "pwsh -Command 'Install-Module -Name Pester -Force -Scope AllUsers; Install-Module -Name powershell-yaml -Force -Scope AllUsers'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.powershell",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "pspester.pester-test"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "pwsh"
+      }
+    }
+  }
+}
