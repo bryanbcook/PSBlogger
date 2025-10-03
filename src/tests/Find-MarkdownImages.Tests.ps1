@@ -4,9 +4,9 @@ Describe "Find-MarkdownImages" {
     Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
 
     # Create test images in TestDrive
-    New-TestImage "TestDrive:\test-image1.png"
-    New-TestImage "TestDrive:\subfolder\test-image2.jpg"
-    New-TestImage "TestDrive:\absolute-image.gif"
+    New-TestImage (Get-TestFilePath 'test-image1.png')
+    New-TestImage (Get-TestFilePath 'subfolder' 'test-image2.jpg')
+    New-TestImage (Get-TestFilePath 'absolute-image.gif')
 
     InModuleScope PSBlogger {
       # reset blogger session to ensure that user preferences are not carried over into test
@@ -17,7 +17,7 @@ Describe "Find-MarkdownImages" {
   Context "Basic image detection" {
       It "Should include external images by default" {
         # arrange
-        $markdownFile = Join-Path "TestDrive:" "external.md"
+        $markdownFile = Get-TestFilePath 'external.md'
         $markdownContent = @(
           "# Test Post"
           ""
@@ -38,7 +38,7 @@ Describe "Find-MarkdownImages" {
 
       It "Should exclude external images when -ExcludeExternal is used" {
         # arrange
-        $markdownFile = Join-Path "TestDrive:" "external-exclude.md"
+        $markdownFile = Get-TestFilePath 'external-exclude.md'
         $markdownContent = @(
           "# Test Post"
           ""
@@ -61,7 +61,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should return an empty array if there are no images" {
       # arrange
-      $markdownFile = Join-Path "TestDrive:" "no-images.md"
+      $markdownFile = Get-TestFilePath 'no-images.md'
       $markdownContent = "# Test Post"
       Set-MarkdownFile $markdownFile $markdownContent
 
@@ -75,7 +75,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find images with alt text only" {
       # arrange
-      $markdownFile = Join-Path "TestDrive:" "basic.md"
+      $markdownFile = Get-TestFilePath 'basic.md'
       $markdownContent = @(
         "# Test Post"
         ""
@@ -98,7 +98,7 @@ Describe "Find-MarkdownImages" {
 
     It "Should find images with alt text and title" {
       # arrange
-      $markdownFile = Join-Path "TestDrive:" "with-title.md"
+      $markdownFile = Get-TestFilePath 'with-title.md'
       $markdownContent = @(
         "# Test Post"
         ""

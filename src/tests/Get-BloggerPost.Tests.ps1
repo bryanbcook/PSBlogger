@@ -1,7 +1,7 @@
 Describe "Get-BloggerPost" {
   BeforeEach {
-    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
-    Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
+    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
 
     $OutDirectory = Resolve-Path TestDrive:
   }

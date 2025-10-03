@@ -1,3 +1,25 @@
+function Get-TestFilePath {
+  <#
+    .SYNOPSIS
+    Returns a platform-agnostic test file path rooted in TestDrive
+    .DESCRIPTION
+    Use this helper to generate file paths for test files, ensuring compatibility across platforms.
+    .PARAMETER PathSegments
+    One or more path segments to append to TestDrive
+    .EXAMPLE
+    Get-TestFilePath 'foo.md' # => TestDrive/foo.md (Linux) or TestDrive:\foo.md (Windows)
+  #>
+  param(
+    [Parameter(Mandatory, ValueFromRemainingArguments=$true)]
+    [string[]]$PathSegments
+  )
+  $path = 'TestDrive:'
+  foreach ($segment in $PathSegments) {
+    $path = Join-Path -Path $path -ChildPath $segment
+  }
+  return $path
+}
+
 function Set-MarkdownFile($path, $content) {
   <#
     .SYNOPSIS

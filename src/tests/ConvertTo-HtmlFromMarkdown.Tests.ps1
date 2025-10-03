@@ -1,15 +1,15 @@
 Describe "ConvertTo-HtmlFromMarkdown" {
   BeforeAll {
-    Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
+    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
 
-    $script:InFile = "TestDrive:\123.md"
-    $script:OutFile = "TestDrive:\123.html"
+    $script:InFile = Get-TestFilePath "123.md"
+    $script:OutFile = Get-TestFilePath "123.html"
 
     Set-MarkdownFile -Path $script:InFile -Content "# Hello World"
   }
 
   BeforeEach {
-    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
   }
 
   AfterEach {
