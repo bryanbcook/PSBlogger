@@ -9,7 +9,7 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/git-lfs:1": {}
   },
-  "postCreateCommand": "pwsh -Command 'Install-Module -Name Pester -Force -Scope AllUsers; Install-Module -Name powershell-yaml -Force -Scope AllUsers'",
+  "postCreateCommand": "pwsh -c \"Install-Module Pester -Force -Scope AllUsers; Install-Module powershell-yaml -Force -Scope AllUsers\"",
   "customizations": {
     "vscode": {
       "extensions": [
