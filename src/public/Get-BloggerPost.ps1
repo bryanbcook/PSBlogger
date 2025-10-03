@@ -48,8 +48,8 @@ Function Get-BloggerPost {
     [Parameter(ParameterSetName = "Persist")]
     [string]$BlogId,
 
-    [Parameter(Mandatory,ParameterSetName = "Default")]
-    [Parameter(Mandatory,ParameterSetName = "Persist")]
+    [Parameter(ParameterSetName = "Default")]
+    [Parameter(ParameterSetName = "Persist")]
     [string]$PostId,
 
     [Parameter(Mandatory, ParameterSetName = "Persist")]
@@ -65,6 +65,10 @@ Function Get-BloggerPost {
     [Parameter(ParameterSetName = "Persist")]
     [switch]$PassThru
   )
+
+  if ([string]::IsNullOrEmpty($PostId)) {
+    throw "PostId is required."
+  }
 
   if (!$PSBoundParameters.ContainsKey("BlogId")) {
     $BlogId = $BloggerSession.BlogId
