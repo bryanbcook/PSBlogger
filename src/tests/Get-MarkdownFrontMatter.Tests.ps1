@@ -1,7 +1,9 @@
 Describe "Get-MarkdownFrontMatter" {
-  BeforeEach {
-    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
+  BeforeAll {
     Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
+  }
+  BeforeEach {
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force   
 
     $markdownWithFrontMatterFile = Get-TestFilePath 'valid.md'
     $markdownWithFrontMatter = @"
@@ -50,7 +52,5 @@ no heading
       $expectedTitle = ([System.IO.Path]::GetFileNameWithoutExtension($file) -replace '-', ' ')
       $result.title | Should -Be $expectedTitle
     }
-  }
-
-  
+  }  
 }

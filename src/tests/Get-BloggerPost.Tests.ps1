@@ -1,7 +1,10 @@
 Describe "Get-BloggerPost" {
+  BeforeAll {
+    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
+  }
+
   BeforeEach {
     Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
-    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
 
     $OutDirectory = Resolve-Path TestDrive:
   }
@@ -191,8 +194,7 @@ Describe "Get-BloggerPost" {
 
       $postId = "123"
       $title = "Test Post"
-      $outFile = "TestDrive:\$title.md"
-      
+      $outFile = Get-TestFile "$title.md"
     }
 
     AfterEach {
@@ -271,7 +273,7 @@ Describe "Get-BloggerPost" {
 
       $postId = "123"
       $title = "Test Post"
-      $outFile = "TestDrive:\$postId.json"
+      $outFile = Get-TestFilePath "$postId.json"
       
     }
 
@@ -343,8 +345,7 @@ Describe "Get-BloggerPost" {
       Get-BloggerPost -PostId 123 -Format HTML -OutDirectory "TestDrive:\"
 
       # assert
-      Test-Path "TestDrive:\123.html" | Should -BeTrue
-
+      Test-Path (Get-TestFilePath "123.html") | Should -BeTrue
     }
 
     It "Should ignore folderdateformat when post has not been published" {
@@ -364,7 +365,7 @@ Describe "Get-BloggerPost" {
       Get-BloggerPost -PostId 123 -Format HTML -OutDirectory "TestDrive:\" -FolderDateFormat "YYYY\\MM"
 
       # assert
-      Test-Path "TestDrive:\123.html" | Should -BeTrue
+      Test-Path (Get-TestFilePath "123.html") | Should -BeTrue
     }
   }
 
@@ -405,7 +406,5 @@ Describe "Get-BloggerPost" {
       # assert
       $result | Should -Not -BeNullOrEmpty
     }
-
-
   }
 }

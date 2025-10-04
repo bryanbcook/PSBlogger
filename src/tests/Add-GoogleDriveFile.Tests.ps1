@@ -1,7 +1,7 @@
 Describe 'Add-GoogleDriveFile' {
 
     BeforeEach {
-      Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+      Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
 
       # prevent actual API calls during tests
       InModuleScope PSBlogger {

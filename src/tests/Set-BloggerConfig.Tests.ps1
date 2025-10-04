@@ -6,8 +6,12 @@ $script:UserPreferences = @(
 )
 
 Describe "Set-BloggerConfig" {
+  BeforeAll {
+    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
+  }
+
   BeforeEach {
-    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force    
     
     # Ensure the test has a clean BloggerSession variable
     InModuleScope "PSBlogger" {
@@ -28,7 +32,7 @@ Describe "Set-BloggerConfig" {
       New-Variable -Name BloggerSession -Value $BloggerSession -Scope Script -Force
     }
 
-    New-Item -Path TestDrive:/Attachments -ItemType Directory -Force | Out-Null
+    New-Item -Path (Get-TestFilePath "Attachments") -ItemType Directory -Force | Out-Null
   }
 
   It "Should persist new value to <UserPreference> to BloggerSession.UserPreferences" -TestCases $script:UserPreferences {
@@ -38,7 +42,16 @@ Describe "Set-BloggerConfig" {
     # assert
     InModuleScope "PSBlogger" {
       $userPreferences = Get-Content $BloggerSession.UserPreferences -Raw | ConvertFrom-Json
-      $userPreferences.$UserPreference | Should -Be $UserPreferenceValue
+      
+      # Handle path normalization for cross-platform compatibility
+      if ($UserPreference -eq "AttachmentsDirectory") {
+        # Convert both paths to the same format for comparison
+        $actualPath = [System.IO.Path]::GetFullPath($userPreferences.$UserPreference)
+        $expectedPath = [System.IO.Path]::GetFullPath($UserPreferenceValue)
+        $actualPath | Should -Be $expectedPath
+      } else {
+        $userPreferences.$UserPreference | Should -Be $UserPreferenceValue
+      }
     } -Parameters @{ UserPreference=$UserPreference; UserPreferenceValue=$UserPreferenceValue }
   }
 
@@ -53,7 +66,16 @@ Describe "Set-BloggerConfig" {
     # assert
     InModuleScope "PSBlogger" {
       $userPreferences = Get-Content $BloggerSession.UserPreferences -Raw | ConvertFrom-Json
-      $userPreferences.$UserPreference | Should -Be $UserPreferenceValue
+      
+      # Handle path normalization for cross-platform compatibility
+      if ($UserPreference -eq "AttachmentsDirectory") {
+        # Convert both paths to the same format for comparison
+        $actualPath = [System.IO.Path]::GetFullPath($userPreferences.$UserPreference)
+        $expectedPath = [System.IO.Path]::GetFullPath($UserPreferenceValue)
+        $actualPath | Should -Be $expectedPath
+      } else {
+        $userPreferences.$UserPreference | Should -Be $UserPreferenceValue
+      }
     } -Parameters @{ UserPreference=$UserPreference; UserPreferenceValue=$UserPreferenceValue }
   }
 
@@ -87,9 +109,10 @@ Describe "Set-BloggerConfig" {
 
       # assert
       InModuleScope "PSBlogger" {
-        $expectedPath = (Resolve-Path -Path "TestDrive:/Attachments").Path
+        $expectedPath = [System.IO.Path]::GetFullPath((Join-Path "TestDrive:" "Attachments"))
         $userPreferences = Get-Content $BloggerSession.UserPreferences -Raw | ConvertFrom-Json
-        $userPreferences.AttachmentsDirectory | Should -Be $expectedPath
+        $actualPath = [System.IO.Path]::GetFullPath($userPreferences.AttachmentsDirectory)
+        $actualPath | Should -Be $expectedPath
       }
     }
     finally {
