@@ -298,7 +298,7 @@ Describe "Find-MarkdownImages" {
     It "Should use attachments directory user preference if available" {
       # arrange
       InModuleScope PSBlogger {
-        $BloggerSession.AttachmentsDirectory = Get-TestFilePath "attachments"
+        $BloggerSession.AttachmentsDirectory = Join-Path "TestDrive:" "attachments"
       }
 
       # use a markdown file that is a sibling to attachments directory to ensure

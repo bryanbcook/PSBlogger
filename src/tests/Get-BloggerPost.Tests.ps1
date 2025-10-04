@@ -194,7 +194,7 @@ Describe "Get-BloggerPost" {
 
       $postId = "123"
       $title = "Test Post"
-      $outFile = Get-TestFile "$title.md"
+      $outFile = Get-TestFilePath "$title.md"
     }
 
     AfterEach {
