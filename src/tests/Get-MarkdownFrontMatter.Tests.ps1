@@ -1,9 +1,11 @@
 Describe "Get-MarkdownFrontMatter" {
+  BeforeAll {
+    Import-Module $PSScriptRoot/_TestHelpers.ps1 -Force
+  }
   BeforeEach {
-    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
-    Import-Module $PSScriptRoot\_TestHelpers.ps1 -Force
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force   
 
-    $markdownWithFrontMatterFile = "TestDrive:\valid.md"
+    $markdownWithFrontMatterFile = Get-TestFilePath 'valid.md'
     $markdownWithFrontMatter = @"
 ---
 title: hello world
@@ -13,7 +15,7 @@ postid: 1234
 "@
     Set-MarkdownFile $markdownWithFrontMatterFile $markdownWithFrontMatter
 
-    $markdownWithoutFrontMatterFile = "TestDrive:\invalid.md"
+    $markdownWithoutFrontMatterFile = Get-TestFilePath 'invalid.md'
     $markdownWithoutFrontMatter = @"
 # First Heading
 "@
@@ -31,22 +33,24 @@ postid: 1234
   Context "Front Matter does not contain title" {
     It "Should create default title from first heading when available" {
 
+      # act
       $result = Get-MarkdownFrontMatter -File $markdownWithoutFrontMatterFile
   
+      # assert
       $result.title | Should -Be "First Heading"
     }
-  
+
     It "Should use file name for title if no headings are present" {
-      $file = "TestDrive:\markdown-without-header.md"
+      $file = Get-TestFilePath 'markdown-without-header.md'
       Set-MarkdownFile -Path $file -Content @"
 no heading
 "@
 
       $result = Get-MarkdownFrontMatter -File $file
 
-      $result.title | Should -Be "markdown without header"
+      # The expected title is the file name without extension, with dashes replaced by spaces
+      $expectedTitle = ([System.IO.Path]::GetFileNameWithoutExtension($file) -replace '-', ' ')
+      $result.title | Should -Be $expectedTitle
     }
-  }
-
-  
+  }  
 }

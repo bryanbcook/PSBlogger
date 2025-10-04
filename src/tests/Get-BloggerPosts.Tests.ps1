@@ -1,7 +1,7 @@
 Describe "Get-BloggerPosts" {
 
   BeforeEach {
-    Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+    Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
   }
 
   Context "Retrieve All Posts" {

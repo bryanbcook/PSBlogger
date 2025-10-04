@@ -1,7 +1,7 @@
 Describe "Get-GoogleDriveFile" {
 
     BeforeEach {
-        Import-Module $PSScriptRoot\..\PSBlogger.psm1 -Force
+        Import-Module $PSScriptRoot/../PSBlogger.psm1 -Force
 
         InModuleScope PSBlogger {
             Mock Invoke-GApi { throw "Unexpected call $uri" }

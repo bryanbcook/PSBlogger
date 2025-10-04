@@ -9,7 +9,7 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/git-lfs:1": {}
   },
-  "postCreateCommand": "pwsh -c \"Install-Module Pester -Force -Scope AllUsers; Install-Module powershell-yaml -Force -Scope AllUsers\"",
+  "postCreateCommand": "pwsh -c \"Install-Module Pester -Force; Install-Module powershell-yaml -Force\"",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -21,7 +21,8 @@
         "pspester.pester-test"
       ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "pwsh"
+        "terminal.integrated.defaultProfile.linux": "pwsh",
+        "powershell.pester.useLegacyCodeLens": false
       }
     }
   }
