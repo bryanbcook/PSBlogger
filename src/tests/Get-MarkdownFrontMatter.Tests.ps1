@@ -30,6 +30,48 @@ postid: 1234
     $result.postId | Should -Be "1234"
   }
 
+  It "Should only find front matter at the top of the file" {
+    # arrange
+    # create content with two --- sections
+    $content = @(
+      "---"
+      "title: First Title"
+      "---"
+      "# Heading"
+      "An example with a page break or hr"
+      "---"
+      "# Second Title"
+    ) -join "`n"
+    $path = Get-TestFilePath 'front-matter-top-only.md'
+    Set-MarkdownFile -Path $path -Content $content
+
+    # act
+    $result = Get-MarkdownFrontMatter -File $path
+
+    # assert
+    $result.title | Should -Be "First Title"
+  }
+
+  It "Should not complain if content has --- but not intended as front matter" {
+    # arrange
+    $content = @(
+      "An example with a page break or hr"
+      "````"
+      "---"
+      "Some content in a block"
+      "---"
+      "````"
+    ) -join "`n"
+    $path = Get-TestFilePath 'no-front-matter.md'
+    Set-MarkdownFile -Path $path -Content $content
+
+    # act
+    $result = Get-MarkdownFrontMatter -File $path
+
+    # assert
+    $result.title | Should -Be "no front matter" # from file name
+  }
+
   Context "Front Matter does not contain title" {
     It "Should create default title from first heading when available" {
 
