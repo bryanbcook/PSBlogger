@@ -213,6 +213,15 @@ Describe "Get-BloggerPost" {
       $frontMatter.postId | Should -Be "123"
     }
 
+    It "Should write title to frontmatter" {
+      # act
+      Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
+
+      # assert
+      $frontMatter = Get-MarkdownFrontMatter -File $outFile
+      $frontMatter.title | Should -Be "Test Post"
+    }
+
     It "Should write labels to frontmatter" {
       # act
       Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"

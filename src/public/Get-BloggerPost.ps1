@@ -135,6 +135,7 @@ Function Get-BloggerPost {
           $title = $result.title
           $frontMatter = [ordered]@{
             postId = $result.id
+            title = $result.title
           }
           if ($result.PSObject.Properties.Name -contains "labels") {
             Write-Verbose "Using post labels: $($result.labels)"
