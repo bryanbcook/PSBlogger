@@ -17,18 +17,15 @@ Function Get-MarkdownFrontMatter
 
   $Content = Get-Content $File -Raw
   
-  $yamlRegex = '(?smi)(---.*?)(?:---)'
+  $yamlRegex = '(?smi)\A(---.*?)(?:---)'
 
   try {
 
-    $result = $null
+    $result = [ordered]@{}
     
     if ($Content -match $yamlRegex) {
       $yamlBlock = ($Content | Select-String $yamlRegex -AllMatches).Matches[0].Groups[1].Value
-  
       $result = $yamlBlock | ConvertFrom-Yaml -Ordered 
-    } else {
-      $result = [ordered]@{}
     }
 
     if (!$result['title']) {
