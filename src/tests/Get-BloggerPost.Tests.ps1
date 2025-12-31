@@ -213,6 +213,15 @@ Describe "Get-BloggerPost" {
       $frontMatter.postId | Should -Be "123"
     }
 
+    It "Should write title to frontmatter" {
+      # act
+      Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
+
+      # assert
+      $frontMatter = Get-MarkdownFrontMatter -File $outFile
+      $frontMatter.title | Should -Be "Test Post"
+    }
+
     It "Should write labels to frontmatter" {
       # act
       Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
@@ -249,6 +258,54 @@ Describe "Get-BloggerPost" {
       $frontMatter = Get-MarkdownFrontMatter -File $outFile
       $frontMatter['tags'] -eq $null | Should -BeFalse
       $frontMatter['tags'] | Should -Be @()
+    }
+
+    Context "Illegal characters in title" {
+      It "Should sanitize filename when title contains special character (<character>)" -TestCases @(
+        @{ character = '?'; }
+        @{ character = '/'; }
+        @{ character = ':'; }
+        @{ character = '*'; }
+        @{ character = '"'; }
+        @{ character = '<'; }
+        @{ character = '>'; }
+        @{ character = '|'; }
+      ) {
+        $title = "Test$($character)Post"
+        
+        # arrange
+        InModuleScope PSBlogger -Parameters @{ testTitle = $title } {
+          param($testTitle)
+          
+          $script:currentTitle = $testTitle
+
+          # Mock the session to return a test blog ID
+          $BloggerSession.BlogId = "test-blog-id"
+
+          $postId = "123"
+
+          # mock post retrieval
+          Mock Invoke-GApi -MockWith { 
+            [pscustomobject]@{ 
+              id = "123"
+              title = $script:currentTitle
+              published = [datetime]"2023-10-01T17:30:00-04:00"
+              content = "<h1>Hello World</h1><p>This is a post.</p>" 
+            }
+          }
+        }
+
+        $expectedFileName = "Test_Post.md"
+        $outFile = Get-TestFilePath $expectedFileName
+
+        # act
+        Get-BloggerPost -PostId $postId -Format Markdown -OutDirectory "TestDrive:\"
+
+        # assert
+        Test-Path $outFile | Should -BeTrue
+        $frontMatter = Get-MarkdownFrontMatter -File $outFile
+        $frontMatter.title | Should -Be $title
+      }
     }
   }
 

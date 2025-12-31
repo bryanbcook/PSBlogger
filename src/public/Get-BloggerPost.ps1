@@ -135,6 +135,7 @@ Function Get-BloggerPost {
           $title = $result.title
           $frontMatter = [ordered]@{
             postId = $result.id
+            title = $result.title
           }
           if ($result.PSObject.Properties.Name -contains "labels") {
             Write-Verbose "Using post labels: $($result.labels)"
@@ -144,7 +145,8 @@ Function Get-BloggerPost {
             $frontMatter['tags'] = @()
           }
           Write-Verbose "Saving frontmatter: $($frontMatter | ConvertTo-Json -Depth 10)"
-          $file = "$title.md"
+          $sanitizedTitle = $title -replace '[\\\/:\*\?"<>\|]', '_' -replace '\s+', ' ' -replace '^\s+|\s+$',''
+          $file = "$sanitizedTitle.md"
           
           $filePath = Join-Path -Path $OutDirectory -ChildPath $file
           ConvertTo-MarkdownFromHtml -Content $result.content -OutFile $filePath
